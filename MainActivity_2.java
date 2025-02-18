@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
                     float speed = (dt > 0) ? (distance / dt) * 1000 : 0; // px/sec 단위로 속도 측정
 
                     // 속도가 빨라지는 순간 새로운 Path 생성하여 색상 유지
-                    if (!speedIncreased && speed > 300) { // 특정 속도 이상이면 색 변경
+                    if (!speedIncreased && speed > 10000) { // 특정 속도 이상이면 색 변경
                         paths.add(currentPath);
                         Paint savedPaint = new Paint(currentPaint);
                         paints.add(savedPaint);
