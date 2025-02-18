@@ -20,17 +20,16 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DrawingView drawingView; // 손가락 터치로 그리는 뷰
+    private DrawingView drawingView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);  // 전체 화면 활성화
+        EdgeToEdge.enable(this);
 
-        // 프레임 레이아웃 생성 (전체 화면 컨테이너)
         FrameLayout frameLayout = new FrameLayout(this);
         frameLayout.setId(R.id.main);
-        frameLayout.setBackgroundColor(Color.WHITE); // 배경을 흰색으로 설정
+        frameLayout.setBackgroundColor(Color.WHITE);
 
         // 격자 뷰 추가
         GridView gridView = new GridView(this);
@@ -63,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(frameLayout);
 
-        // 시스템 바 영역을 고려하여 패딩 적용
         ViewCompat.setOnApplyWindowInsetsListener(frameLayout, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -74,14 +72,14 @@ public class MainActivity extends AppCompatActivity {
     // 내부 클래스: 10x10 격자를 그리는 커스텀 뷰
     private static class GridView extends View {
         private final Paint paint;
-        private final int numColumns = 10; // 가로 10개
-        private final int numRows = 10;    // 세로 10개
+        private final int numColumns = 10;
+        private final int numRows = 10;
 
         public GridView(Context context) {
             super(context);
             paint = new Paint();
-            paint.setColor(Color.BLACK); // 선 색상 검은색
-            paint.setStrokeWidth(2); // 선 두께
+            paint.setColor(Color.BLACK);
+            paint.setStrokeWidth(2);
         }
 
         public GridView(Context context, AttributeSet attrs) {
@@ -101,13 +99,11 @@ public class MainActivity extends AppCompatActivity {
             int cellWidth = width / numColumns;
             int cellHeight = height / numRows;
 
-            // 세로선 그리기
             for (int i = 0; i <= numColumns; i++) {
                 float x = i * cellWidth;
                 canvas.drawLine(x, 0, x, height, paint);
             }
 
-            // 가로선 그리기
             for (int i = 0; i <= numRows; i++) {
                 float y = i * cellHeight;
                 canvas.drawLine(0, y, width, y, paint);
@@ -115,17 +111,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 내부 클래스: 손가락 터치로 그리는 커스텀 뷰
+    // 내부 클래스: 손가락 터치 속도에 따라 색상이 변하는 커스텀 뷰
     private static class DrawingView extends View {
         private final Paint paint;
         private final Path path;
+        private float lastX, lastY;
+        private long lastTime;
 
         public DrawingView(Context context) {
             super(context);
             path = new Path();
             paint = new Paint();
-            paint.setColor(Color.RED); // 자취 색상: 빨강
-            paint.setStrokeWidth(5); // 선 두께
+            paint.setStrokeWidth(5);
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeJoin(Paint.Join.ROUND);
             paint.setStrokeCap(Paint.Cap.ROUND);
@@ -134,27 +131,60 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            canvas.drawPath(path, paint); // 터치 경로를 그림
+            canvas.drawPath(path, paint);
         }
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             float x = event.getX();
             float y = event.getY();
+            long currentTime = System.currentTimeMillis();
 
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     path.moveTo(x, y);
+                    lastX = x;
+                    lastY = y;
+                    lastTime = currentTime;
                     break;
+
                 case MotionEvent.ACTION_MOVE:
+                    float dx = x - lastX;
+                    float dy = y - lastY;
+                    long dt = currentTime - lastTime;
+
+                    float distance = (float) Math.sqrt(dx * dx + dy * dy);
+                    float speed = (dt > 0) ? (distance / dt) * 1000 : 0; // px/sec 단위로 속도 측정
+
+                    // 색상 변경 (파란색 → 빨간색 보간)
+                    int color = getSpeedColor(speed);
+                    paint.setColor(color);
+
                     path.lineTo(x, y);
+                    lastX = x;
+                    lastY = y;
+                    lastTime = currentTime;
                     break;
+
                 case MotionEvent.ACTION_UP:
                     break;
             }
 
-            invalidate(); // 화면 갱신
+            invalidate();
             return true;
+        }
+
+        // 속도에 따라 색상 변화 (파란색 → 빨간색)
+        private int getSpeedColor(float speed) {
+            float minSpeed = 50;  // 느린 속도 기준 (파란색)
+            float maxSpeed = 1000; // 빠른 속도 기준 (빨간색)
+
+            float ratio = Math.min(1, Math.max(0, (speed - minSpeed) / (maxSpeed - minSpeed)));
+
+            int red = (int) (255 * ratio);
+            int blue = (int) (255 * (1 - ratio));
+
+            return Color.rgb(red, 0, blue);
         }
 
         // 터치 경로 초기화 (Reset 버튼 클릭 시 호출)
