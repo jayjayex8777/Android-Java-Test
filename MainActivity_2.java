@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 내부 클래스: 손가락 터치 시 선의 색상이 속도에 따라 변하는 커스텀 뷰
+    // 내부 클래스: 터치 속도가 빨라지는 순간 새로운 색으로 변경하는 뷰
     private static class DrawingView extends View {
         private final List<Path> paths = new ArrayList<>();
         private final List<Paint> paints = new ArrayList<>();
@@ -128,18 +128,18 @@ public class MainActivity extends AppCompatActivity {
 
         public DrawingView(Context context) {
             super(context);
-            initNewPath();
+            initNewPath(Color.BLUE); // 초기 파란색
         }
 
-        private void initNewPath() {
+        private void initNewPath(int color) {
             currentPath = new Path();
             currentPaint = new Paint();
             currentPaint.setStrokeWidth(5);
             currentPaint.setStyle(Paint.Style.STROKE);
             currentPaint.setStrokeJoin(Paint.Join.ROUND);
             currentPaint.setStrokeCap(Paint.Cap.ROUND);
-            currentPaint.setColor(Color.BLUE); // 기본 색상은 파란색
-            speedIncreased = false; // 새로운 선이 시작될 때 속도 증가 여부 초기화
+            currentPaint.setColor(color);
+            speedIncreased = false; // 새로운 선 시작 시 속도 초기화
         }
 
         @Override
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    initNewPath();
+                    initNewPath(Color.BLUE);
                     currentPath.moveTo(x, y);
                     lastX = x;
                     lastY = y;
@@ -176,11 +176,16 @@ public class MainActivity extends AppCompatActivity {
                     float distance = (float) Math.sqrt(dx * dx + dy * dy);
                     float speed = (dt > 0) ? (distance / dt) * 1000 : 0; // px/sec 단위로 속도 측정
 
-                    // 속도가 특정 임계값 이상으로 증가한 경우에만 색 변경
+                    // 속도가 빨라지는 순간 새로운 Path 생성하여 색상 유지
                     if (!speedIncreased && speed > 300) { // 특정 속도 이상이면 색 변경
-                        currentPaint = new Paint(currentPaint); // 새로운 색상의 페인트 복사
-                        currentPaint.setColor(Color.RED); // 빨간색으로 변경
-                        speedIncreased = true; // 속도 증가 플래그 설정
+                        paths.add(currentPath);
+                        Paint savedPaint = new Paint(currentPaint);
+                        paints.add(savedPaint);
+
+                        // 새로운 Path를 빨간색으로 시작
+                        initNewPath(Color.RED);
+                        currentPath.moveTo(lastX, lastY);
+                        speedIncreased = true;
                     }
 
                     currentPath.lineTo(x, y);
@@ -191,9 +196,9 @@ public class MainActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_UP:
                     paths.add(currentPath);
-                    Paint savedPaint = new Paint(currentPaint);
-                    paints.add(savedPaint);
-                    initNewPath();
+                    Paint savedPaintFinal = new Paint(currentPaint);
+                    paints.add(savedPaintFinal);
+                    initNewPath(Color.BLUE);
                     break;
             }
 
@@ -205,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         public void clear() {
             paths.clear();
             paints.clear();
-            initNewPath();
+            initNewPath(Color.BLUE);
             invalidate();
         }
     }
