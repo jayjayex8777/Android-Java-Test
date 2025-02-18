@@ -18,6 +18,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
     private DrawingView drawingView;
@@ -111,27 +114,43 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 내부 클래스: 손가락 터치 속도에 따라 색상이 변하는 커스텀 뷰
+    // 내부 클래스: 터치할 때마다 새로운 경로를 저장하고 색상이 변하는 커스텀 뷰
     private static class DrawingView extends View {
-        private final Paint paint;
-        private final Path path;
+        private final List<Path> paths = new ArrayList<>();
+        private final List<Paint> paints = new ArrayList<>();
+
+        private Path currentPath;
+        private Paint currentPaint;
+
         private float lastX, lastY;
         private long lastTime;
 
         public DrawingView(Context context) {
             super(context);
-            path = new Path();
-            paint = new Paint();
-            paint.setStrokeWidth(5);
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeJoin(Paint.Join.ROUND);
-            paint.setStrokeCap(Paint.Cap.ROUND);
+            initNewPath();
+        }
+
+        private void initNewPath() {
+            currentPath = new Path();
+            currentPaint = new Paint();
+            currentPaint.setStrokeWidth(5);
+            currentPaint.setStyle(Paint.Style.STROKE);
+            currentPaint.setStrokeJoin(Paint.Join.ROUND);
+            currentPaint.setStrokeCap(Paint.Cap.ROUND);
+            currentPaint.setColor(Color.BLUE); // 기본 색상은 파란색
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            canvas.drawPath(path, paint);
+            // 저장된 모든 경로를 그린다.
+            for (int i = 0; i < paths.size(); i++) {
+                canvas.drawPath(paths.get(i), paints.get(i));
+            }
+            // 현재 그리고 있는 경로도 그린다.
+            if (currentPath != null) {
+                canvas.drawPath(currentPath, currentPaint);
+            }
         }
 
         @Override
@@ -142,7 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    path.moveTo(x, y);
+                    initNewPath();
+                    currentPath.moveTo(x, y);
                     lastX = x;
                     lastY = y;
                     lastTime = currentTime;
@@ -158,15 +178,19 @@ public class MainActivity extends AppCompatActivity {
 
                     // 색상 변경 (파란색 → 빨간색 보간)
                     int color = getSpeedColor(speed);
-                    paint.setColor(color);
+                    currentPaint.setColor(color);
 
-                    path.lineTo(x, y);
+                    currentPath.lineTo(x, y);
                     lastX = x;
                     lastY = y;
                     lastTime = currentTime;
                     break;
 
                 case MotionEvent.ACTION_UP:
+                    // 현재 경로를 저장하고 새 경로 준비
+                    paths.add(currentPath);
+                    paints.add(currentPaint);
+                    initNewPath();
                     break;
             }
 
@@ -187,9 +211,11 @@ public class MainActivity extends AppCompatActivity {
             return Color.rgb(red, 0, blue);
         }
 
-        // 터치 경로 초기화 (Reset 버튼 클릭 시 호출)
+        // 모든 자취 초기화 (Reset 버튼 클릭 시 호출)
         public void clear() {
-            path.reset();
+            paths.clear();
+            paints.clear();
+            initNewPath();
             invalidate();
         }
     }
