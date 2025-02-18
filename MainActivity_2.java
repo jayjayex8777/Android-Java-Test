@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 내부 클래스: 터치할 때마다 새로운 경로를 저장하고 색상이 변하는 커스텀 뷰
+    // 내부 클래스: 터치할 때마다 색상이 실시간으로 변하는 커스텀 뷰
     private static class DrawingView extends View {
         private final List<Path> paths = new ArrayList<>();
         private final List<Paint> paints = new ArrayList<>();
@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
 
         private float lastX, lastY;
         private long lastTime;
+        private int currentColor;
 
         public DrawingView(Context context) {
             super(context);
@@ -137,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
             currentPaint.setStyle(Paint.Style.STROKE);
             currentPaint.setStrokeJoin(Paint.Join.ROUND);
             currentPaint.setStrokeCap(Paint.Cap.ROUND);
-            currentPaint.setColor(Color.BLUE); // 기본 색상은 파란색
+            currentColor = Color.BLUE; // 기본 색상 파란색
+            currentPaint.setColor(currentColor);
         }
 
         @Override
@@ -176,9 +178,11 @@ public class MainActivity extends AppCompatActivity {
                     float distance = (float) Math.sqrt(dx * dx + dy * dy);
                     float speed = (dt > 0) ? (distance / dt) * 1000 : 0; // px/sec 단위로 속도 측정
 
-                    // 색상 변경 (파란색 → 빨간색 보간)
-                    int color = getSpeedColor(speed);
-                    currentPaint.setColor(color);
+                    // 속도가 빨라지는 순간에만 색상 변경
+                    if (speed > 200) { // 특정 속도 이상에서만 변경
+                        currentColor = getSpeedColor(speed);
+                        currentPaint.setColor(currentColor);
+                    }
 
                     currentPath.lineTo(x, y);
                     lastX = x;
@@ -189,7 +193,9 @@ public class MainActivity extends AppCompatActivity {
                 case MotionEvent.ACTION_UP:
                     // 현재 경로를 저장하고 새 경로 준비
                     paths.add(currentPath);
-                    paints.add(currentPaint);
+                    Paint savedPaint = new Paint(currentPaint);
+                    savedPaint.setColor(currentColor); // 최종 색상 유지
+                    paints.add(savedPaint);
                     initNewPath();
                     break;
             }
@@ -200,8 +206,8 @@ public class MainActivity extends AppCompatActivity {
 
         // 속도에 따라 색상 변화 (파란색 → 빨간색)
         private int getSpeedColor(float speed) {
-            float minSpeed = 50;  // 느린 속도 기준 (파란색)
-            float maxSpeed = 1000; // 빠른 속도 기준 (빨간색)
+            float minSpeed = 200;  // 속도가 200 이상이면 색상 변화 시작
+            float maxSpeed = 1000; // 최대 속도
 
             float ratio = Math.min(1, Math.max(0, (speed - minSpeed) / (maxSpeed - minSpeed)));
 
