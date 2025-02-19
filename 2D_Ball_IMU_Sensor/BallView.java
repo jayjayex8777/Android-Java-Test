@@ -63,20 +63,10 @@ public class BallView extends View {
     }
 
     public void applySensorMovement(float dx, float dy) {
-        float threshold = 0.2f; // 노이즈 제거를 위한 최소 임계값
-
-        // 작은 값은 노이즈로 간주하고 0 처리
-        if (Math.abs(dx) < threshold) dx = 0;
-        if (Math.abs(dy) < threshold) dy = 0;
-
-        velocityX += dx * sensorSensitivity;
-        velocityY += dy * sensorSensitivity;
-
-        // 최대 속도 제한
-        velocityX = Math.max(-maxSpeed, Math.min(maxSpeed, velocityX));
-        velocityY = Math.max(-maxSpeed, Math.min(maxSpeed, velocityY));
+    velocityX += dx * sensorSensitivity;
+    velocityY += dy * sensorSensitivity;
     }
-
+    
     private void startAnimationLoop() {
         Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() {
             @Override
