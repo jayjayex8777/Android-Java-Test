@@ -12,14 +12,14 @@ public class BallRenderer implements GLSurfaceView.Renderer {
     private Ball ball;
     private float ballX = 0f, ballY = 0f;
     private float velocityX = 0f, velocityY = 0f;
-    private static final float FRICTION = 0.98f; // 마찰 계수
+    private static final float FRICTION = 0.95f; // 마찰 계수
     private float[] projectionMatrix = new float[16];
-    private float rotationAngle = 0f; // 🔥 추가된 변수: 공의 회전 각도
+    private float rotationAngle = 0f;
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        GLES20.glClearColor(1f, 1f, 1f, 1f); // 배경: 하얀색
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST); // 깊이 테스트 활성화
+        GLES20.glClearColor(1f, 1f, 1f, 1f);
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         ball = new Ball();
     }
 
@@ -27,14 +27,12 @@ public class BallRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        // 공의 속도 적용 및 마찰력 감속
         ballX += velocityX;
         ballY += velocityY;
         velocityX *= FRICTION;
         velocityY *= FRICTION;
 
-        // 🔥 추가된 코드: 공이 이동할 때 회전 각도 업데이트
-        rotationAngle += Math.sqrt(velocityX * velocityX + velocityY * velocityY) * 500;
+        rotationAngle += (Math.abs(velocityX) + Math.abs(velocityY)) * 20;
 
         ball.draw(ballX, ballY, rotationAngle, projectionMatrix);
     }
@@ -47,8 +45,8 @@ public class BallRenderer implements GLSurfaceView.Renderer {
     }
 
     public void updateBallMovement(float dx, float dy) {
-        ballX += dx;
-        ballY += dy;
+        velocityX = dx * 2;
+        velocityY = dy * 2;
     }
 
     public void applyFling(float vX, float vY) {
