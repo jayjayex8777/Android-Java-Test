@@ -23,9 +23,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager sensorManager;
     private Sensor accelerometer, gyroscope;
 
-    private float accelX = 0, accelY = 0; // 가속도 센서 값
-    private float gyroX = 0, gyroY = 0;   // 자이로 센서 값
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         }
 
-        // Weight 버튼 (무게 설정 팝업)
+        // Weight 버튼 (팝업 창 띄우기)
         Button btnWeight = findViewById(R.id.btn_weight);
         btnWeight.setOnClickListener(v -> showWeightDialog());
 
@@ -67,11 +64,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        // 터치 이벤트 리스너 설정
         mainLayout.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
     }
 
-    // Weight 버튼을 눌렀을 때 팝업 창 띄우기
     private void showWeightDialog() {
         Dialog weightDialog = new Dialog(this);
         weightDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -89,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     if (newMass > 0) {
                         ballView.setBallMass(newMass);
                         Toast.makeText(this, "Mass set to: " + newMass, Toast.LENGTH_SHORT).show();
-                        weightDialog.dismiss(); // 팝업 닫기
+                        weightDialog.dismiss();
                     } else {
                         Toast.makeText(this, "Enter a positive number!", Toast.LENGTH_SHORT).show();
                     }
@@ -102,30 +97,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         weightDialog.show();
     }
 
-    // 센서 값 변경 감지 (가속도 센서 및 자이로 센서)
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            accelX = event.values[0]; // X축 기울기
-            accelY = event.values[1]; // Y축 기울기
-        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            gyroX = event.values[0];
-            gyroY = event.values[1];
+            float accelX = Math.abs(event.values[0]) > 0.2f ? -event.values[0] : 0;
+            float accelY = Math.abs(event.values[1]) > 0.2f ? event.values[1] : 0;
+            ballView.applySensorMovement(accelX, accelY);
         }
-
-        // 공의 움직임을 센서 기반으로 업데이트
-        ballView.applySensorMovement(-accelX, accelY);
     }
 
-    // 센서 등록 및 해제
     @Override
     protected void onResume() {
         super.onResume();
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
-        }
-        if (gyroscope != null) {
-            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
         }
     }
 
