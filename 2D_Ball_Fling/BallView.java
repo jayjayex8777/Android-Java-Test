@@ -14,8 +14,8 @@ public class BallView extends View {
     private float velocityX = 0, velocityY = 0; // 공 속도
     private final float friction = 0.98f;
     private final float bounceFactor = 0.7f;
-    private int screenWidth = 0, screenHeight = 0; // 화면 크기 저장
-    private float mass = 1.0f; // 공의 무게 (기본 Medium)
+    private int screenWidth = 0, screenHeight = 0;
+    private float mass = 1.0f; // 공의 무게 (기본값)
     private boolean isTouched = false;
 
     public BallView(Context context) {
@@ -32,7 +32,7 @@ public class BallView extends View {
         screenWidth = w;
         screenHeight = h;
         
-        // 공을 화면 정중앙에 배치
+        // 공을 화면 중앙에 배치
         ballX = screenWidth / 2f;
         ballY = screenHeight / 2f;
     }
@@ -49,7 +49,7 @@ public class BallView extends View {
 
     public void moveBall(float dx, float dy) {
         isTouched = true;
-        ballX += dx / mass; // 무게가 크면 이동량이 작아짐
+        ballX += dx / mass; // 무게에 따라 이동량 조절
         ballY += dy / mass;
         velocityX = 0;
         velocityY = 0;
@@ -58,7 +58,7 @@ public class BallView extends View {
 
     public void flingBall(float velocityX, float velocityY) {
         isTouched = true;
-        this.velocityX = velocityX / (30 * mass); // 무거울수록 힘이 더 필요함
+        this.velocityX = velocityX / (30 * mass); // 무거울수록 더 세게 밀어야 함
         this.velocityY = velocityY / (30 * mass);
     }
 
@@ -101,7 +101,6 @@ public class BallView extends View {
         velocityX *= friction;
         velocityY *= friction;
 
-        // 너무 작은 속도는 0으로 설정하여 멈춤
         if (Math.abs(velocityX) < 0.1) velocityX = 0;
         if (Math.abs(velocityY) < 0.1) velocityY = 0;
     }
