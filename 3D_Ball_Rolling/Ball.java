@@ -9,29 +9,22 @@ import java.nio.FloatBuffer;
 
 public class Ball {
 
-    private FloatBuffer vertexBuffer, normalBuffer;
+    private FloatBuffer vertexBuffer;
     private int shaderProgram;
     private float[] modelMatrix = new float[16];
-    private float[] rotationMatrix = new float[16];
-    private int positionHandle, colorHandle, matrixHandle, normalHandle, lightPosHandle;
+
+    private int positionHandle, colorHandle, matrixHandle;
 
     private final String vertexShaderCode =
             "uniform mat4 uMVPMatrix;" +
-            "uniform mat4 uRotationMatrix;" +
             "attribute vec4 vPosition;" +
-            "attribute vec3 vNormal;" +
-            "uniform vec3 uLightPos;" +
-            "varying vec4 vColor;" +
             "void main() {" +
-            "  vec3 transformedNormal = normalize(vec3(uRotationMatrix * vec4(vNormal, 0.0)));" +
-            "  float lightIntensity = max(dot(transformedNormal, normalize(uLightPos)), 0.3);" +
-            "  vColor = vec4(1.0, 0.0, 0.0, 1.0) * lightIntensity;" + // 🔥 빨간색 적용
             "  gl_Position = uMVPMatrix * vPosition;" +
             "}";
 
     private final String fragmentShaderCode =
             "precision mediump float;" +
-            "varying vec4 vColor;" +
+            "uniform vec4 vColor;" +
             "void main() {" +
             "  gl_FragColor = vColor;" +
             "}";
@@ -39,7 +32,7 @@ public class Ball {
     private static final int COORDS_PER_VERTEX = 3;
     private static final int VERTEX_COUNT = 36;
     private float[] ballCoords = new float[VERTEX_COUNT * 3];
-    private float[] normals = new float[VERTEX_COUNT * 3];
+    private float[] color = {1.0f, 0.0f, 0.0f, 1.0f};  // 🔥 빨간색 고정
 
     public Ball() {
         generateBallVertices();
@@ -49,12 +42,6 @@ public class Ball {
         vertexBuffer = bb.asFloatBuffer();
         vertexBuffer.put(ballCoords);
         vertexBuffer.position(0);
-
-        ByteBuffer nb = ByteBuffer.allocateDirect(normals.length * 4);
-        nb.order(ByteOrder.nativeOrder());
-        normalBuffer = nb.asFloatBuffer();
-        normalBuffer.put(normals);
-        normalBuffer.position(0);
 
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
         int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
@@ -70,10 +57,6 @@ public class Ball {
             ballCoords[i * 3] = (float) Math.cos(angle) * 0.2f;
             ballCoords[i * 3 + 1] = (float) Math.sin(angle) * 0.2f;
             ballCoords[i * 3 + 2] = 0f;
-
-            normals[i * 3] = ballCoords[i * 3];
-            normals[i * 3 + 1] = ballCoords[i * 3 + 1];
-            normals[i * 3 + 2] = 1.0f;
         }
     }
 
@@ -82,7 +65,7 @@ public class Ball {
 
         Matrix.setIdentityM(modelMatrix, 0);
         Matrix.translateM(modelMatrix, 0, x, y, -2f);
-        Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 0f, 1f);
+        Matrix.rotateM(modelMatrix, 0, angle, 0f, 0f, 1f);
 
         float[] mvpMatrix = new float[16];
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, modelMatrix, 0);
@@ -93,6 +76,9 @@ public class Ball {
         positionHandle = GLES20.glGetAttribLocation(shaderProgram, "vPosition");
         GLES20.glEnableVertexAttribArray(positionHandle);
         GLES20.glVertexAttribPointer(positionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+
+        colorHandle = GLES20.glGetUniformLocation(shaderProgram, "vColor");
+        GLES20.glUniform4fv(colorHandle, 1, color, 0);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, VERTEX_COUNT);
         GLES20.glDisableVertexAttribArray(positionHandle);
