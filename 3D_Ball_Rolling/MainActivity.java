@@ -19,36 +19,28 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
 
-        // OpenGL ES View
         glSurfaceView = new GLSurfaceView(this);
-        glSurfaceView.setEGLContextClientVersion(2); // OpenGL ES 2.0 사용
+        glSurfaceView.setEGLContextClientVersion(2);
         renderer = new BallRenderer();
         glSurfaceView.setRenderer(renderer);
         glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         setContentView(glSurfaceView);
 
-        // Gesture Detector
         gestureDetector = new GestureDetector(this, new GestureListener());
 
-        // 터치 이벤트 리스너 설정
         glSurfaceView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
     }
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            // OpenGL 좌표로 변환
-            float dx = -distanceX / 300f; 
-            float dy = distanceY / 300f;
-            renderer.updateBallMovement(dx, dy);
+            renderer.updateBallMovement(-distanceX / 100, distanceY / 100);
             return true;
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            float vX = velocityX / 5000f;
-            float vY = -velocityY / 5000f;
-            renderer.applyFling(vX, vY);
+            renderer.applyFling(velocityX / 5000, -velocityY / 5000);
             return true;
         }
     }
