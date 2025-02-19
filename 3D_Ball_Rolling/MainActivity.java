@@ -37,15 +37,18 @@ public class MainActivity extends AppCompatActivity {
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            // 사용자의 손가락 이동 방향에 따라 공을 굴린다.
-            renderer.updateBallMovement(-distanceX / 100, distanceY / 100);
+            // OpenGL 좌표로 변환
+            float dx = -distanceX / 300f; 
+            float dy = distanceY / 300f;
+            renderer.updateBallMovement(dx, dy);
             return true;
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            // 빠른 스와이프로 플링(Fling) 효과 적용
-            renderer.applyFling(velocityX / 5000, -velocityY / 5000);
+            float vX = velocityX / 5000f;
+            float vY = -velocityY / 5000f;
+            renderer.applyFling(vX, vY);
             return true;
         }
     }
