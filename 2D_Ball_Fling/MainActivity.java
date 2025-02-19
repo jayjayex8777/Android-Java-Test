@@ -4,7 +4,9 @@ import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,14 +24,26 @@ public class MainActivity extends AppCompatActivity {
         ballView = new BallView(this);
         mainLayout.addView(ballView);
 
-        // 무게 조절 버튼 설정
-        Button btnLight = findViewById(R.id.btn_light);
-        Button btnMedium = findViewById(R.id.btn_medium);
-        Button btnHeavy = findViewById(R.id.btn_heavy);
+        // 무게 설정 관련 UI 요소
+        EditText etMass = findViewById(R.id.et_mass);
+        Button btnApplyMass = findViewById(R.id.btn_apply_mass);
 
-        btnLight.setOnClickListener(v -> ballView.setBallMass(0.5f));   // 가벼움
-        btnMedium.setOnClickListener(v -> ballView.setBallMass(1.0f));  // 보통
-        btnHeavy.setOnClickListener(v -> ballView.setBallMass(2.0f));   // 무거움
+        btnApplyMass.setOnClickListener(v -> {
+            String massInput = etMass.getText().toString();
+            if (!massInput.isEmpty()) {
+                try {
+                    float newMass = Float.parseFloat(massInput);
+                    if (newMass > 0) {
+                        ballView.setBallMass(newMass);
+                        Toast.makeText(this, "Mass set to: " + newMass, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Enter a positive number!", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Invalid input!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         // GestureDetector 설정
         gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
