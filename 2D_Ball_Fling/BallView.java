@@ -15,7 +15,8 @@ public class BallView extends View {
     private final float friction = 0.98f;
     private final float bounceFactor = 0.7f;
     private int screenWidth = 0, screenHeight = 0; // 화면 크기 저장
-    private boolean isTouched = false; // 사용자가 터치했는지 여부
+    private float mass = 1.0f; // 공의 무게 (기본 Medium)
+    private boolean isTouched = false;
 
     public BallView(Context context) {
         super(context);
@@ -30,7 +31,7 @@ public class BallView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         screenWidth = w;
         screenHeight = h;
-
+        
         // 공을 화면 정중앙에 배치
         ballX = screenWidth / 2f;
         ballY = screenHeight / 2f;
@@ -42,19 +43,23 @@ public class BallView extends View {
         canvas.drawCircle(ballX, ballY, ballRadius, paint);
     }
 
+    public void setBallMass(float newMass) {
+        this.mass = newMass;
+    }
+
     public void moveBall(float dx, float dy) {
-        isTouched = true; // 사용자가 터치했으므로 공 이동 가능
-        ballX += dx;
-        ballY += dy;
+        isTouched = true;
+        ballX += dx / mass; // 무게가 크면 이동량이 작아짐
+        ballY += dy / mass;
         velocityX = 0;
         velocityY = 0;
         invalidate();
     }
 
     public void flingBall(float velocityX, float velocityY) {
-        isTouched = true; // Fling 시에도 공 이동 가능
-        this.velocityX = velocityX / 30;
-        this.velocityY = velocityY / 30;
+        isTouched = true;
+        this.velocityX = velocityX / (30 * mass); // 무거울수록 힘이 더 필요함
+        this.velocityY = velocityY / (30 * mass);
     }
 
     private void startAnimationLoop() {
@@ -69,7 +74,7 @@ public class BallView extends View {
     }
 
     private void updatePhysics() {
-        if (!isTouched) return; // 터치가 없으면 물리 효과 중지
+        if (!isTouched) return;
 
         ballX += velocityX;
         ballY += velocityY;
@@ -92,7 +97,7 @@ public class BallView extends View {
             velocityY = -velocityY * bounceFactor;
         }
 
-        // 마찰력 적용 (속도 점차 감소)
+        // 마찰력 적용
         velocityX *= friction;
         velocityY *= friction;
 
