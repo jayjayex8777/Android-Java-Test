@@ -34,13 +34,13 @@ public class MainActivity extends AppCompatActivity {
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            renderer.updateBallMovement(-distanceX / 100, distanceY / 100);
+            renderer.updateBallMovement(-distanceX / 50, distanceY / 50);  // 🔥 감도 증가 (더 부드럽게)
             return true;
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            renderer.applyFling(velocityX / 5000, -velocityY / 5000);
+            renderer.applyFling(velocityX / 3000, -velocityY / 3000);  // 🔥 속도 조정
             return true;
         }
     }
