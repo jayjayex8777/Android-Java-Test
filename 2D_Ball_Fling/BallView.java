@@ -13,7 +13,6 @@ public class BallView extends View {
     private final Paint paint;
     private float velocityX = 0, velocityY = 0; // 공 속도
     private final float friction = 0.98f;
-    private final float gravity = 0.5f;
     private final float bounceFactor = 0.7f;
     private int screenWidth = 0, screenHeight = 0; // 화면 크기 저장
     private boolean isTouched = false; // 사용자가 터치했는지 여부
@@ -44,7 +43,7 @@ public class BallView extends View {
     }
 
     public void moveBall(float dx, float dy) {
-        isTouched = true; // 사용자가 터치했으므로 중력 적용 시작
+        isTouched = true; // 사용자가 터치했으므로 공 이동 가능
         ballX += dx;
         ballY += dy;
         velocityX = 0;
@@ -53,7 +52,7 @@ public class BallView extends View {
     }
 
     public void flingBall(float velocityX, float velocityY) {
-        isTouched = true; // Fling 시에도 중력 적용 시작
+        isTouched = true; // Fling 시에도 공 이동 가능
         this.velocityX = velocityX / 30;
         this.velocityY = velocityY / 30;
     }
@@ -70,9 +69,7 @@ public class BallView extends View {
     }
 
     private void updatePhysics() {
-        if (isTouched) {
-            velocityY += gravity; // 중력은 터치 후부터 적용
-        }
+        if (!isTouched) return; // 터치가 없으면 물리 효과 중지
 
         ballX += velocityX;
         ballY += velocityY;
@@ -86,16 +83,13 @@ public class BallView extends View {
             velocityX = -velocityX * bounceFactor;
         }
 
-        // 상하 벽 충돌 처리 (바닥 포함)
+        // 상하 벽 충돌 처리
         if (ballY - ballRadius < 0) {
             ballY = ballRadius;
             velocityY = -velocityY * bounceFactor;
         } else if (ballY + ballRadius > screenHeight) {
             ballY = screenHeight - ballRadius;
             velocityY = -velocityY * bounceFactor;
-
-            // 바닥에서 감속 효과 적용
-            velocityX *= 0.9f;
         }
 
         // 마찰력 적용 (속도 점차 감소)
