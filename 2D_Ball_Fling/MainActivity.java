@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         ballView = new BallView(this);
         mainLayout.addView(ballView);
 
-        // 무게 설정 관련 UI 요소
+        // 무게 입력 UI 요소
         EditText etMass = findViewById(R.id.et_mass);
         Button btnApplyMass = findViewById(R.id.btn_apply_mass);
 
