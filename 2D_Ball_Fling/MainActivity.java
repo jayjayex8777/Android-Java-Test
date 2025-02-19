@@ -1,8 +1,10 @@
 package com.example.apptest3;
 
+import android.app.Dialog;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -24,26 +26,9 @@ public class MainActivity extends AppCompatActivity {
         ballView = new BallView(this);
         mainLayout.addView(ballView);
 
-        // 무게 입력 UI 요소
-        EditText etMass = findViewById(R.id.et_mass);
-        Button btnApplyMass = findViewById(R.id.btn_apply_mass);
-
-        btnApplyMass.setOnClickListener(v -> {
-            String massInput = etMass.getText().toString();
-            if (!massInput.isEmpty()) {
-                try {
-                    float newMass = Float.parseFloat(massInput);
-                    if (newMass > 0) {
-                        ballView.setBallMass(newMass);
-                        Toast.makeText(this, "Mass set to: " + newMass, Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(this, "Enter a positive number!", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (NumberFormatException e) {
-                    Toast.makeText(this, "Invalid input!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        // Weight 버튼
+        Button btnWeight = findViewById(R.id.btn_weight);
+        btnWeight.setOnClickListener(v -> showWeightDialog());
 
         // GestureDetector 설정
         gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
@@ -67,5 +52,36 @@ public class MainActivity extends AppCompatActivity {
 
         // 터치 이벤트 리스너 설정
         mainLayout.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+    }
+
+    // 팝업 창 띄우기
+    private void showWeightDialog() {
+        Dialog weightDialog = new Dialog(this);
+        weightDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        weightDialog.setContentView(R.layout.dialog_weight);
+        weightDialog.setCancelable(true);
+
+        EditText etMass = weightDialog.findViewById(R.id.et_mass);
+        Button btnSave = weightDialog.findViewById(R.id.btn_save_mass);
+
+        btnSave.setOnClickListener(v -> {
+            String massInput = etMass.getText().toString();
+            if (!massInput.isEmpty()) {
+                try {
+                    float newMass = Float.parseFloat(massInput);
+                    if (newMass > 0) {
+                        ballView.setBallMass(newMass);
+                        Toast.makeText(this, "Mass set to: " + newMass, Toast.LENGTH_SHORT).show();
+                        weightDialog.dismiss(); // 팝업 닫기
+                    } else {
+                        Toast.makeText(this, "Enter a positive number!", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Invalid input!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        weightDialog.show();
     }
 }
