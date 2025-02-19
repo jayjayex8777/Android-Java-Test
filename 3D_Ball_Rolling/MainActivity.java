@@ -39,15 +39,15 @@ public class MainActivity extends AppCompatActivity {
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            float glX = (e2.getX() / screenWidth) * 2 - 1;  // 🔥 OpenGL X 좌표 변환
-            float glY = 1 - (e2.getY() / screenHeight) * 2;  // 🔥 OpenGL Y 좌표 변환
-            renderer.updateBallPosition(glX, glY);
+            float glX = (e2.getX() / screenWidth) * 2 - 1;  
+            float glY = 1 - (e2.getY() / screenHeight) * 2;
+            renderer.updateBallMovement(glX, glY);
             return true;
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            renderer.applyFling(velocityX / 5000, -velocityY / 5000);
+            renderer.applyFling(velocityX / 1000, -velocityY / 1000);
             return true;
         }
     }
