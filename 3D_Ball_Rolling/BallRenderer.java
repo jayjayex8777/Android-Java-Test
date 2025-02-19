@@ -26,7 +26,7 @@ public class BallRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        // 🔥 속도 적용
+        // 🔥 속도 적용 (자연스러운 이동)
         ballX += velocityX;
         ballY += velocityY;
         velocityX *= FRICTION;
@@ -45,9 +45,9 @@ public class BallRenderer implements GLSurfaceView.Renderer {
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 1, 10);
     }
 
-    public void updateBallMovement(float dx, float dy) {
-        velocityX = dx * 2;  // 🔥 속도를 직접 변경
-        velocityY = dy * 2;
+    public void updateBallPosition(float x, float y) {
+        this.ballX = x;
+        this.ballY = y;
     }
 
     public void applyFling(float vX, float vY) {
