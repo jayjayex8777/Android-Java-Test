@@ -16,6 +16,7 @@ public class BallView extends View {
     private final float gravity = 0.5f;
     private final float bounceFactor = 0.7f;
     private int screenWidth = 0, screenHeight = 0; // 화면 크기 저장
+    private boolean isTouched = false; // 사용자가 터치했는지 여부
 
     public BallView(Context context) {
         super(context);
@@ -30,8 +31,8 @@ public class BallView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         screenWidth = w;
         screenHeight = h;
-        
-        // 화면 크기를 알게 된 후 공을 중앙으로 배치
+
+        // 공을 화면 정중앙에 배치
         ballX = screenWidth / 2f;
         ballY = screenHeight / 2f;
     }
@@ -43,6 +44,7 @@ public class BallView extends View {
     }
 
     public void moveBall(float dx, float dy) {
+        isTouched = true; // 사용자가 터치했으므로 중력 적용 시작
         ballX += dx;
         ballY += dy;
         velocityX = 0;
@@ -51,6 +53,7 @@ public class BallView extends View {
     }
 
     public void flingBall(float velocityX, float velocityY) {
+        isTouched = true; // Fling 시에도 중력 적용 시작
         this.velocityX = velocityX / 30;
         this.velocityY = velocityY / 30;
     }
@@ -67,9 +70,12 @@ public class BallView extends View {
     }
 
     private void updatePhysics() {
+        if (isTouched) {
+            velocityY += gravity; // 중력은 터치 후부터 적용
+        }
+
         ballX += velocityX;
         ballY += velocityY;
-        velocityY += gravity; // 중력 적용
 
         // 좌우 벽 충돌 처리
         if (ballX - ballRadius < 0) {
