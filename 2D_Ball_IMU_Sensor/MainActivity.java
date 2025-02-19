@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,7 +22,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private BallView ballView;
     private GestureDetector gestureDetector;
     private SensorManager sensorManager;
-    private Sensor accelerometer, gyroscope;
+    private Sensor accelerometer;
+    private boolean sensorMode = false; // 기본 모드는 터치 모드
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,29 +39,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         }
 
-        // Weight 버튼 (팝업 창 띄우기)
+        // Weight 버튼 (무게 설정 팝업)
         Button btnWeight = findViewById(R.id.btn_weight);
         btnWeight.setOnClickListener(v -> showWeightDialog());
+
+        // Toggle 버튼 (모드 전환)
+        ToggleButton toggleMode = findViewById(R.id.toggle_mode);
+        toggleMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            sensorMode = isChecked;
+            if (sensorMode) {
+                Toast.makeText(this, "Sensor Mode Activated", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Touch Mode Activated", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         // GestureDetector 설정 (터치 제어)
         gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDown(MotionEvent e) {
-                return true;
+                return !sensorMode; // Sensor Mode일 때 터치 비활성화
             }
 
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                ballView.moveBall(-distanceX, -distanceY);
+                if (!sensorMode) ballView.moveBall(-distanceX, -distanceY);
                 return true;
             }
 
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                ballView.flingBall(velocityX, velocityY);
+                if (!sensorMode) ballView.flingBall(velocityX, velocityY);
                 return true;
             }
         });
@@ -99,9 +111,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            float accelX = Math.abs(event.values[0]) > 0.2f ? -event.values[0] : 0;
-            float accelY = Math.abs(event.values[1]) > 0.2f ? event.values[1] : 0;
+        if (sensorMode && event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float accelX = -event.values[0];
+            float accelY = event.values[1];
             ballView.applySensorMovement(accelX, accelY);
         }
     }
