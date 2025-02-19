@@ -10,15 +10,16 @@ import javax.microedition.khronos.opengles.GL10;
 public class BallRenderer implements GLSurfaceView.Renderer {
 
     private Ball ball;
-    private float ballX = 0f, ballY = 0f;
+    private float ballX = 0f, ballY = 0f, ballZ = -3f;
     private float velocityX = 0f, velocityY = 0f;
-    private static final float FRICTION = 0.98f; 
+    private static final float FRICTION = 0.99f;  
     private float[] projectionMatrix = new float[16];
     private float rotationAngle = 0f;
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES20.glClearColor(1f, 1f, 1f, 1f);
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         ball = new Ball();
     }
 
@@ -33,21 +34,21 @@ public class BallRenderer implements GLSurfaceView.Renderer {
         velocityY *= FRICTION;
 
         // 🔥 속도에 따라 회전 적용
-        rotationAngle += (Math.abs(velocityX) + Math.abs(velocityY)) * 100;
+        rotationAngle += (Math.abs(velocityX) + Math.abs(velocityY)) * 200;
 
-        ball.draw(ballX, ballY, rotationAngle, projectionMatrix);
+        ball.draw(ballX, ballY, ballZ, rotationAngle, projectionMatrix);
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
         float ratio = (float) width / height;
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 1, 10);
+        Matrix.perspectiveM(projectionMatrix, 0, 45, ratio, 1, 10);  // 🔥 원근법 적용
     }
 
-    public void updateBallPosition(float x, float y) {
-        this.ballX = x;
-        this.ballY = y;
+    public void updateBallMovement(float x, float y) {
+        velocityX = (x - ballX) * 0.1f;  // 🔥 부드러운 이동 적용
+        velocityY = (y - ballY) * 0.1f;
     }
 
     public void applyFling(float vX, float vY) {
