@@ -25,7 +25,7 @@ public class Ball {
             "void main() {" +
             "  vec3 transformedNormal = normalize(vec3(uRotationMatrix * vec4(vNormal, 0.0)));" +
             "  float lightIntensity = max(dot(transformedNormal, normalize(uLightPos)), 0.3);" +
-            "  vColor = vec4(lightIntensity, lightIntensity, lightIntensity, 1.0);" +
+            "  vColor = vec4(1.0, 0.0, 0.0, 1.0) * lightIntensity;" + // 🔥 빨간색 적용
             "  gl_Position = uMVPMatrix * vPosition;" +
             "}";
 
@@ -90,36 +90,18 @@ public class Ball {
         matrixHandle = GLES20.glGetUniformLocation(shaderProgram, "uMVPMatrix");
         GLES20.glUniformMatrix4fv(matrixHandle, 1, false, mvpMatrix, 0);
 
-        normalHandle = GLES20.glGetAttribLocation(shaderProgram, "vNormal");
-        GLES20.glEnableVertexAttribArray(normalHandle);
-        GLES20.glVertexAttribPointer(normalHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, 0, normalBuffer);
-
-        lightPosHandle = GLES20.glGetUniformLocation(shaderProgram, "uLightPos");
-        GLES20.glUniform3f(lightPosHandle, 1.0f, 1.0f, 1.0f);
-
         positionHandle = GLES20.glGetAttribLocation(shaderProgram, "vPosition");
         GLES20.glEnableVertexAttribArray(positionHandle);
         GLES20.glVertexAttribPointer(positionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, 0, vertexBuffer);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, VERTEX_COUNT);
         GLES20.glDisableVertexAttribArray(positionHandle);
-        GLES20.glDisableVertexAttribArray(normalHandle);
     }
 
     private int loadShader(int type, String shaderCode) {
         int shader = GLES20.glCreateShader(type);
         GLES20.glShaderSource(shader, shaderCode);
         GLES20.glCompileShader(shader);
-
-        int[] compileStatus = new int[1];
-        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compileStatus, 0);
-
-        if (compileStatus[0] == 0) {
-            String error = GLES20.glGetShaderInfoLog(shader);
-            GLES20.glDeleteShader(shader);
-            throw new RuntimeException("Shader compilation failed: " + error);
-        }
-
         return shader;
     }
 }
