@@ -12,14 +12,13 @@ public class BallRenderer implements GLSurfaceView.Renderer {
     private Ball ball;
     private float ballX = 0f, ballY = 0f;
     private float velocityX = 0f, velocityY = 0f;
-    private static final float FRICTION = 0.95f; // 마찰 계수
+    private static final float FRICTION = 0.98f; 
     private float[] projectionMatrix = new float[16];
     private float rotationAngle = 0f;
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES20.glClearColor(1f, 1f, 1f, 1f);
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         ball = new Ball();
     }
 
@@ -27,12 +26,14 @@ public class BallRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
+        // 🔥 속도 적용
         ballX += velocityX;
         ballY += velocityY;
         velocityX *= FRICTION;
         velocityY *= FRICTION;
 
-        rotationAngle += (Math.abs(velocityX) + Math.abs(velocityY)) * 20;
+        // 🔥 속도에 따라 회전 적용
+        rotationAngle += (Math.abs(velocityX) + Math.abs(velocityY)) * 100;
 
         ball.draw(ballX, ballY, rotationAngle, projectionMatrix);
     }
@@ -45,7 +46,7 @@ public class BallRenderer implements GLSurfaceView.Renderer {
     }
 
     public void updateBallMovement(float dx, float dy) {
-        velocityX = dx * 2;
+        velocityX = dx * 2;  // 🔥 속도를 직접 변경
         velocityY = dy * 2;
     }
 
