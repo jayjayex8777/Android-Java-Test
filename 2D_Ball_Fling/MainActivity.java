@@ -25,18 +25,18 @@ public class MainActivity extends AppCompatActivity {
         gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDown(MotionEvent e) {
-                return true; // 반드시 true를 반환해야 이후 이벤트가 감지됨
+                return true;
             }
 
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                ballView.moveBall(-distanceX, -distanceY); // 터치 이동
+                ballView.moveBall(-distanceX, -distanceY);
                 return true;
             }
 
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                ballView.flingBall(velocityX, velocityY); // 빠르게 스와이프
+                ballView.flingBall(velocityX, velocityY);
                 return true;
             }
         });
