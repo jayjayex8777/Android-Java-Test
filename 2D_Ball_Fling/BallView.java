@@ -5,26 +5,34 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
+import android.view.Choreographer;
 
 public class BallView extends View {
-    private float ballX, ballY; // 공의 좌표
-    private final float ballRadius = 50f; // 공의 반지름
-    private final Paint paint; // 공을 그릴 Paint 객체
-    private float velocityX = 0, velocityY = 0; // 공의 속도
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private final int FRAME_RATE = 16; // 60fps를 위한 약 16ms 갱신 속도
-    private final float friction = 0.98f; // 공의 감속 효과
+    private float ballX, ballY; // 공 위치
+    private final float ballRadius = 50f; // 공 크기
+    private final Paint paint;
+    private float velocityX = 0, velocityY = 0; // 공 속도
+    private final float friction = 0.98f; // 마찰 계수 (0.98 = 서서히 감속)
+    private final float gravity = 0.5f; // 중력 가속도
+    private final float bounceFactor = 0.7f; // 탄성 계수 (벽 충돌 시 속도 유지율)
+    private int screenWidth, screenHeight; // 화면 크기
 
     public BallView(Context context) {
         super(context);
         paint = new Paint();
         paint.setColor(Color.RED);
         paint.setAntiAlias(true);
-        ballX = 300; // 초기 위치 설정
+        ballX = 300; // 초기 위치
         ballY = 300;
-        startBallMovement();
+        startAnimationLoop();
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        screenWidth = w;
+        screenHeight = h;
     }
 
     @Override
@@ -33,40 +41,66 @@ public class BallView extends View {
         canvas.drawCircle(ballX, ballY, ballRadius, paint);
     }
 
-    // 사용자가 터치해서 이동하는 경우
+    // 터치 드래그 이동
     public void moveBall(float dx, float dy) {
         ballX += dx;
         ballY += dy;
-        invalidate(); // 화면 갱신
+        velocityX = 0; // 이동 중에는 기존 속도를 초기화
+        velocityY = 0;
+        invalidate();
     }
 
-    // 사용자가 빠르게 Fling 했을 때
+    // Fling 동작 시 빠르게 이동
     public void flingBall(float velocityX, float velocityY) {
-        this.velocityX = velocityX / 40; // 속도 조절
-        this.velocityY = velocityY / 40;
+        this.velocityX = velocityX / 30; // 속도를 조절하여 너무 빠르지 않도록 함
+        this.velocityY = velocityY / 30;
     }
 
-    // 공의 물리적 이동 처리
-    private void startBallMovement() {
-        handler.postDelayed(new Runnable() {
+    // 공의 움직임 업데이트 (애니메이션 루프)
+    private void startAnimationLoop() {
+        Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() {
             @Override
-            public void run() {
-                ballX += velocityX;
-                ballY += velocityY;
-
-                // 감속 효과 적용
-                velocityX *= friction;
-                velocityY *= friction;
-
-                // 너무 작은 속도는 0으로 설정하여 멈춤
-                if (Math.abs(velocityX) < 0.1) velocityX = 0;
-                if (Math.abs(velocityY) < 0.1) velocityY = 0;
-
-                invalidate(); // 화면 갱신
-
-                // 계속해서 반복 실행
-                handler.postDelayed(this, FRAME_RATE);
+            public void doFrame(long frameTimeNanos) {
+                updatePhysics();
+                invalidate();
+                Choreographer.getInstance().postFrameCallback(this);
             }
-        }, FRAME_RATE);
+        });
+    }
+
+    // 물리 효과 적용
+    private void updatePhysics() {
+        ballX += velocityX;
+        ballY += velocityY;
+        velocityY += gravity; // 중력 적용
+
+        // 좌우 벽 충돌 처리
+        if (ballX - ballRadius < 0) {
+            ballX = ballRadius;
+            velocityX = -velocityX * bounceFactor; // 반사 효과
+        } else if (ballX + ballRadius > screenWidth) {
+            ballX = screenWidth - ballRadius;
+            velocityX = -velocityX * bounceFactor;
+        }
+
+        // 상하 벽 충돌 처리 (바닥 포함)
+        if (ballY - ballRadius < 0) {
+            ballY = ballRadius;
+            velocityY = -velocityY * bounceFactor;
+        } else if (ballY + ballRadius > screenHeight) {
+            ballY = screenHeight - ballRadius;
+            velocityY = -velocityY * bounceFactor;
+
+            // 바닥에 닿으면 마찰력 추가 (서서히 멈추도록)
+            velocityX *= 0.9f;
+        }
+
+        // 마찰 적용 (점점 느려짐)
+        velocityX *= friction;
+        velocityY *= friction;
+
+        // 너무 느려지면 멈춤
+        if (Math.abs(velocityX) < 0.1) velocityX = 0;
+        if (Math.abs(velocityY) < 0.1) velocityY = 0;
     }
 }
