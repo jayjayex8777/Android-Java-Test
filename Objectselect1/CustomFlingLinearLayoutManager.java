@@ -1,7 +1,6 @@
 package com.example.objectselect1;
 
 import android.content.Context;
-import android.util.DisplayMetrics;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -15,12 +14,8 @@ public class CustomFlingLinearLayoutManager extends LinearLayoutManager {
 
     @Override
     public boolean fling(int velocityX, int velocityY) {
-        velocityX *= FLING_SPEED_FACTOR; // 🚀 속도 3배 증가
+        velocityX *= FLING_SPEED_FACTOR; // 🚀 속도 증가
+        velocityY *= FLING_SPEED_FACTOR; 
         return super.fling(velocityX, velocityY);
-    }
-
-    @Override
-    protected float computeScrollSpeedFactor(DisplayMetrics displayMetrics) {
-        return super.computeScrollSpeedFactor(displayMetrics) / FLING_SPEED_FACTOR;
     }
 }
