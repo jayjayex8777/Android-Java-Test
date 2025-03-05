@@ -1,43 +1,32 @@
 package com.example.objectselect1;
 
-import android.os.Bundle;
+import android.content.Context;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.Scroller;
 
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SnapHelper;
 
-import java.util.ArrayList;
-import java.util.List;
+public class CustomSpeedLinearLayoutManager extends LinearLayoutManager {
+    private Scroller scroller;
 
-public class MainActivity extends AppCompatActivity {
+    public CustomSpeedLinearLayoutManager(Context context) {
+        super(context, HORIZONTAL, false);
+        scroller = new Scroller(context, new DecelerateInterpolator());
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
-
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-
-        // Set up horizontal layout
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        recyclerView.setLayoutManager(layoutManager);
-
-        // Create list of numbers (1 to 10)
-        List<Integer> numbers = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
-            numbers.add(i);
-        }
-
-        // Set adapter
-        RectangleAdapter adapter = new RectangleAdapter(this, numbers);
-        recyclerView.setAdapter(adapter);
-
-        // Snap effect for smooth scrolling like a train
-        SnapHelper snapHelper = new LinearSnapHelper();
-        snapHelper.attachToRecyclerView(recyclerView);
+    public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
+        RecyclerView.SmoothScroller smoothScroller = new RecyclerView.SmoothScroller(recyclerView.getContext()) {
+            @Override
+            protected void onTargetFound(View targetView, RecyclerView.State state, Action action) {
+                int dx = calculateDxToMakeVisible(targetView, getHorizontalSnapPreference());
+                int dy = calculateDyToMakeVisible(targetView, getVerticalSnapPreference());
+                int time = Math.max(100, Math.abs(dx) * 3); // 🚀 이동 속도 증가 (100 ~ 300ms)
+                action.update(dx, dy, time, scroller);
+            }
+        };
+        smoothScroller.setTargetPosition(position);
+        startSmoothScroll(smoothScroller);
     }
 }
