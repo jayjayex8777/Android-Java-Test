@@ -1,6 +1,8 @@
 package com.example.objectselect1;
 
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,8 +23,8 @@ public class MainActivity extends AppCompatActivity {
 
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
 
-        // 기존의 LinearLayoutManager를 사용하지만 fling 속도를 높임
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        // 🚀 커스텀 LinearLayoutManager 적용
+        CustomFlingLinearLayoutManager layoutManager = new CustomFlingLinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
         // 숫자 리스트 (1~10)
@@ -38,16 +40,5 @@ public class MainActivity extends AppCompatActivity {
         // SnapHelper를 추가하여 한 번에 하나씩 스냅되도록 설정
         SnapHelper snapHelper = new LinearSnapHelper();
         snapHelper.attachToRecyclerView(recyclerView);
-
-        // 🚀 Fling 속도 조절
-        recyclerView.setOnFlingListener(null); // 기존 FlingListener 제거
-        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
-            @Override
-            public boolean onFling(int velocityX, int velocityY) {
-                int newVelocityX = velocityX * 3; // 🚀 속도 3배 증가 (원하는 값으로 조정 가능)
-                recyclerView.fling(newVelocityX, velocityY);
-                return false;
-            }
-        });
     }
 }
