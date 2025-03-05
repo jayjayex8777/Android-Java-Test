@@ -1,32 +1,53 @@
 package com.example.objectselect1;
 
-import android.content.Context;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.Scroller;
-
+import android.os.Bundle;
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SnapHelper;
 
-public class CustomSpeedLinearLayoutManager extends LinearLayoutManager {
-    private Scroller scroller;
+import java.util.ArrayList;
+import java.util.List;
 
-    public CustomSpeedLinearLayoutManager(Context context) {
-        super(context, HORIZONTAL, false);
-        scroller = new Scroller(context, new DecelerateInterpolator());
-    }
+public class MainActivity extends AppCompatActivity {
 
     @Override
-    public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
-        RecyclerView.SmoothScroller smoothScroller = new RecyclerView.SmoothScroller(recyclerView.getContext()) {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+
+        // 기존의 LinearLayoutManager를 사용하지만 fling 속도를 높임
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        recyclerView.setLayoutManager(layoutManager);
+
+        // 숫자 리스트 (1~10)
+        List<Integer> numbers = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            numbers.add(i);
+        }
+
+        // 어댑터 설정
+        RectangleAdapter adapter = new RectangleAdapter(this, numbers);
+        recyclerView.setAdapter(adapter);
+
+        // SnapHelper를 추가하여 한 번에 하나씩 스냅되도록 설정
+        SnapHelper snapHelper = new LinearSnapHelper();
+        snapHelper.attachToRecyclerView(recyclerView);
+
+        // 🚀 Fling 속도 조절
+        recyclerView.setOnFlingListener(null); // 기존 FlingListener 제거
+        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
             @Override
-            protected void onTargetFound(View targetView, RecyclerView.State state, Action action) {
-                int dx = calculateDxToMakeVisible(targetView, getHorizontalSnapPreference());
-                int dy = calculateDyToMakeVisible(targetView, getVerticalSnapPreference());
-                int time = Math.max(100, Math.abs(dx) * 3); // 🚀 이동 속도 증가 (100 ~ 300ms)
-                action.update(dx, dy, time, scroller);
+            public boolean onFling(int velocityX, int velocityY) {
+                int newVelocityX = velocityX * 3; // 🚀 속도 3배 증가 (원하는 값으로 조정 가능)
+                recyclerView.fling(newVelocityX, velocityY);
+                return false;
             }
-        };
-        smoothScroller.setTargetPosition(position);
-        startSmoothScroll(smoothScroller);
+        });
     }
 }
