@@ -1,13 +1,10 @@
 package com.example.objectselect1;
 
 import android.os.Bundle;
-import android.util.Log;
-
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
 import java.util.ArrayList;
@@ -21,10 +18,10 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        CustomRecyclerView recyclerView = findViewById(R.id.recyclerView);
 
         // 🚀 커스텀 LinearLayoutManager 적용
-        CustomFlingLinearLayoutManager layoutManager = new CustomFlingLinearLayoutManager(this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         recyclerView.setLayoutManager(layoutManager);
 
         // 숫자 리스트 (1~10)
