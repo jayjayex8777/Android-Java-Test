@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.SnapHelper;
 import com.github.mikephil.charting.charts.LineChart;
@@ -55,17 +54,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // 🚀 RecyclerView 설정 (Rectangle Object 리스트)
         recyclerView = findViewById(R.id.recyclerView);
         if (recyclerView != null) {
-            LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+            CustomFlingLinearLayoutManager layoutManager = new CustomFlingLinearLayoutManager(this);
             recyclerView.setLayoutManager(layoutManager);
+            recyclerView.setOverScrollMode(CustomRecyclerView.OVER_SCROLL_NEVER); // ✅ 오버스크롤 제거
 
             List<Integer> numbers = new ArrayList<>();
-            for (int i = 1; i <= 30; i++) {  // ✅ 30개로 변경
+            for (int i = 1; i <= 30; i++) {  
                 numbers.add(i);
             }
             RectangleAdapter adapter = new RectangleAdapter(this, numbers);
             recyclerView.setAdapter(adapter);
 
-            // 스냅 도우미 추가 (플링 시 자연스럽게 정렬)
+            // ✅ SnapHelper 유지 (너무 급격하게 멈추지 않도록 함)
             SnapHelper snapHelper = new LinearSnapHelper();
             snapHelper.attachToRecyclerView(recyclerView);
         }
@@ -157,40 +157,5 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             sensorManager.unregisterListener(this);
         }
         handler.removeCallbacks(timeWindowRunnable);
-    }
-
-    // 📊 그래프 초기 설정
-    private void setupChart() {
-        lineData = new LineData();
-        lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 🔴 빨간색
-        lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 🟢 초록색
-        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));  // 🔵 파란색
-
-        chart.setData(lineData);
-        chart.getDescription().setEnabled(false);
-        chart.setTouchEnabled(true);
-        chart.setDragEnabled(true);
-        chart.setScaleEnabled(true);
-
-        XAxis xAxis = chart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setDrawGridLines(false);
-
-        YAxis leftAxis = chart.getAxisLeft();
-        leftAxis.setAxisMinimum(-5f);
-        leftAxis.setAxisMaximum(5f);
-        chart.getAxisRight().setEnabled(false);
-
-        Legend legend = chart.getLegend();
-        legend.setForm(Legend.LegendForm.LINE);
-    }
-
-    private LineDataSet createDataSet(String label, int color) {
-        LineDataSet dataSet = new LineDataSet(new ArrayList<>(), label);
-        dataSet.setColor(color);
-        dataSet.setLineWidth(2f);
-        dataSet.setDrawCircles(false);
-        dataSet.setMode(LineDataSet.Mode.LINEAR);
-        return dataSet;
     }
 }
