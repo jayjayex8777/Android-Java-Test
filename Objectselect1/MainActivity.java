@@ -66,8 +66,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             SnapHelper snapHelper = new LinearSnapHelper();
             snapHelper.attachToRecyclerView(recyclerView);
-        } else {
-            throw new NullPointerException("RecyclerView is null! Check activity_main.xml.");
         }
 
         // 📌 센서 값 표시 TextView
@@ -86,8 +84,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             } else {
                 sensorValues.setText("Gyroscope Sensor Not Available");
             }
-        } else {
-            throw new NullPointerException("SensorManager is null! Check system services.");
         }
 
         handler.post(decayRunnable);
@@ -142,27 +138,5 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             sensorManager.unregisterListener(this);
         }
         handler.removeCallbacks(decayRunnable);
-    }
-
-    private void setupChart() {
-        lineData = new LineData();
-        lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));
-        lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00));
-        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));
-
-        chart.setData(lineData);
-        chart.getDescription().setEnabled(false);
-        chart.setTouchEnabled(true);
-        chart.setDragEnabled(true);
-        chart.setScaleEnabled(true);
-    }
-
-    private LineDataSet createDataSet(String label, int color) {
-        LineDataSet dataSet = new LineDataSet(new ArrayList<>(), label);
-        dataSet.setColor(color);
-        dataSet.setLineWidth(2f);
-        dataSet.setDrawCircles(false);
-        dataSet.setMode(LineDataSet.Mode.LINEAR);
-        return dataSet;
     }
 }
