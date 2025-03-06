@@ -1,5 +1,6 @@
 package com.example.objectselect1;
 
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -148,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         lineData = new LineData();
         lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 🔴 빨간색
         lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 🟢 초록색
-        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA"));  // 🔵 파란색
+        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));  // 🔵 파란색 ✅ 수정 완료!
 
         chart.setData(lineData);
         chart.getDescription().setEnabled(false);
