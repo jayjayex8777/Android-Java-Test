@@ -10,9 +10,6 @@ import android.os.Handler;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.LinearSnapHelper;
-import androidx.recyclerview.widget.SnapHelper;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -31,21 +28,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private LineData lineData;
     private int timeIndex = 0;
 
-    private CustomRecyclerView recyclerView;
-    private float accumulatedPitch = 0f;
-    private static final float PITCH_THRESHOLD = 0.02f;
-    private static final int SCROLL_SPEED = 300;
-    private static final float PITCH_DECAY = 0.98f;
-
     private final Handler handler = new Handler();
-    private final Runnable decayRunnable = new Runnable() {
+    private static final int TIME_WINDOW_MS = 10; // 📌 10ms 단위로 Time Window 생성
+    private final ArrayList<Float> yawValues = new ArrayList<>();
+    private final ArrayList<Float> pitchValues = new ArrayList<>();
+    private final ArrayList<Float> rollValues = new ArrayList<>();
+
+    private final Runnable timeWindowRunnable = new Runnable() {
         @Override
         public void run() {
-            if (Math.abs(accumulatedPitch) > 0.01f) {
-                accumulatedPitch *= PITCH_DECAY;
-                handleGyroScroll(accumulatedPitch);
-                handler.postDelayed(this, 50);
-            }
+            processTimeWindow();
+            handler.postDelayed(this, TIME_WINDOW_MS); // 📌 10ms마다 실행
         }
     };
 
@@ -54,23 +47,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-
-        // 🚀 RecyclerView 설정
-        recyclerView = findViewById(R.id.recyclerView);
-        if (recyclerView != null) {
-            LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-            recyclerView.setLayoutManager(layoutManager);
-
-            List<Integer> numbers = new ArrayList<>();
-            for (int i = 1; i <= 10; i++) {
-                numbers.add(i);
-            }
-            RectangleAdapter adapter = new RectangleAdapter(this, numbers);
-            recyclerView.setAdapter(adapter);
-
-            SnapHelper snapHelper = new LinearSnapHelper();
-            snapHelper.attachToRecyclerView(recyclerView);
-        }
 
         // 📌 센서 값 표시 TextView
         sensorValues = findViewById(R.id.sensorValues);
@@ -84,13 +60,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (sensorManager != null) {
             gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if (gyroscopeSensor != null) {
-                sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
             } else {
                 sensorValues.setText("Gyroscope Sensor Not Available");
             }
         }
 
-        handler.post(decayRunnable);
+        // 📌 Time Window 시작
+        handler.post(timeWindowRunnable);
     }
 
     @Override
@@ -100,13 +77,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float pitch = event.values[1];
             float roll = event.values[2];
 
+            // 📌 센서 값 표시
             sensorValues.setText(String.format("Yaw: %.2f | Pitch: %.2f | Roll: %.2f", yaw, pitch, roll));
 
-            addEntry(yaw, pitch, roll);
-
-            accumulatedPitch += pitch;
-            handleGyroScroll(accumulatedPitch);
+            // 📌 Time Window 내 데이터 수집
+            yawValues.add(yaw);
+            pitchValues.add(pitch);
+            rollValues.add(roll);
         }
+    }
+
+    private void processTimeWindow() {
+        if (!yawValues.isEmpty() && !pitchValues.isEmpty() && !rollValues.isEmpty()) {
+            // 📌 평균 변화량 계산
+            float avgYaw = calculateAverage(yawValues);
+            float avgPitch = calculateAverage(pitchValues);
+            float avgRoll = calculateAverage(rollValues);
+
+            // 📌 그래프 업데이트
+            addEntry(avgYaw, avgPitch, avgRoll);
+
+            // 📌 Time Window 데이터 초기화
+            yawValues.clear();
+            pitchValues.clear();
+            rollValues.clear();
+        }
+    }
+
+    private float calculateAverage(List<Float> values) {
+        float sum = 0f;
+        for (float v : values) {
+            sum += v;
+        }
+        return sum / values.size();
     }
 
     private void addEntry(float yaw, float pitch, float roll) {
@@ -125,13 +128,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    private void handleGyroScroll(float pitch) {
-        if (recyclerView != null && Math.abs(pitch) > PITCH_THRESHOLD) {
-            int scrollAmount = (int) (SCROLL_SPEED * pitch);
-            recyclerView.smoothScrollBy(scrollAmount, 0);
-        }
-    }
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
@@ -141,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
         }
-        handler.removeCallbacks(decayRunnable);
+        handler.removeCallbacks(timeWindowRunnable);
     }
 
     // 📊 그래프 초기 설정
@@ -149,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         lineData = new LineData();
         lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 🔴 빨간색
         lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 🟢 초록색
-        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));  // 🔵 파란색 ✅ 수정 완료!
+        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));  // 🔵 파란색
 
         chart.setData(lineData);
         chart.getDescription().setEnabled(false);
