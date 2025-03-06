@@ -5,6 +5,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,10 +18,10 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import java.util.ArrayList;
 import java.util.List;
-import android.os.Handler;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager sensorManager;
+    private Sensor gyroscopeSensor;
     private TextView sensorValues;
     private LineChart chart;
     private LineData lineData;
@@ -28,9 +29,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private CustomRecyclerView recyclerView;
     private float accumulatedPitch = 0f; // 📌 Pitch 변화량 누적
-    private static final float PITCH_THRESHOLD = 0.02f; // 📌 감도 조정 (기존 0.03 → 0.02)
-    private static final int SCROLL_SPEED = 300; // 📌 스크롤 속도 증가 (기존 200 → 300)
-    private static final float PITCH_DECAY = 0.98f; // 📌 감속 효과 (Pitch 이동이 서서히 줄어듦)
+    private static final float PITCH_THRESHOLD = 0.02f; // 📌 감도 조정
+    private static final int SCROLL_SPEED = 300; // 📌 스크롤 속도 증가
+    private static final float PITCH_DECAY = 0.98f; // 📌 감속 효과
 
     private final Handler handler = new Handler();
     private final Runnable decayRunnable = new Runnable() {
@@ -52,20 +53,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // 🚀 RecyclerView 설정
         recyclerView = findViewById(R.id.recyclerView);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        recyclerView.setLayoutManager(layoutManager);
+        if (recyclerView != null) {
+            LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+            recyclerView.setLayoutManager(layoutManager);
 
-        // 숫자 리스트 (1~10)
-        List<Integer> numbers = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
-            numbers.add(i);
+            // 숫자 리스트 (1~10)
+            List<Integer> numbers = new ArrayList<>();
+            for (int i = 1; i <= 10; i++) {
+                numbers.add(i);
+            }
+            RectangleAdapter adapter = new RectangleAdapter(this, numbers);
+            recyclerView.setAdapter(adapter);
+
+            // SnapHelper 적용
+            SnapHelper snapHelper = new LinearSnapHelper();
+            snapHelper.attachToRecyclerView(recyclerView);
         }
-        RectangleAdapter adapter = new RectangleAdapter(this, numbers);
-        recyclerView.setAdapter(adapter);
-
-        // SnapHelper 적용
-        SnapHelper snapHelper = new LinearSnapHelper();
-        snapHelper.attachToRecyclerView(recyclerView);
 
         // 📌 센서 값 표시 TextView
         sensorValues = findViewById(R.id.sensorValues);
@@ -76,13 +79,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // 📡 센서 매니저 설정
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        Sensor gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        if (gyroscopeSensor != null) {
-            // 📌 센서 업데이트 속도를 가장 빠르게 설정 (SENSOR_DELAY_FASTEST)
-            sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_FASTEST);
+        if (sensorManager != null) {
+            gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            if (gyroscopeSensor != null) {
+                // 📌 센서 업데이트 속도를 가장 빠르게 설정 (SENSOR_DELAY_FASTEST)
+                sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            } else {
+                sensorValues.setText("Gyroscope Sensor Not Available");
+            }
         }
 
-        // 📌 감속 Runnable 시작 (계속 실행되도록)
+        // 📌 감속 Runnable 시작
         handler.post(decayRunnable);
     }
 
@@ -122,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     // 🚀 PITCH 값에 따라 RecyclerView 스크롤 조절 (감속 효과 추가)
     private void handleGyroScroll(float pitch) {
-        if (Math.abs(pitch) > PITCH_THRESHOLD) {
+        if (recyclerView != null && Math.abs(pitch) > PITCH_THRESHOLD) {
             int scrollAmount = (int) (SCROLL_SPEED * pitch);
             recyclerView.smoothScrollBy(scrollAmount, 0);
         }
@@ -130,6 +137,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+        handler.removeCallbacks(decayRunnable); // 📌 감속 핸들러 제거
+    }
 
     // 📊 그래프 초기 설정
     private void setupChart() {
