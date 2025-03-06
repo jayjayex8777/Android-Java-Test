@@ -12,12 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.SnapHelper;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +24,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private LineData lineData;
     private int timeIndex = 0;
 
+    private CustomRecyclerView recyclerView;
+    private float lastPitch = 0f;  // 이전 Pitch 값 저장
+    private static final float PITCH_THRESHOLD = 0.1f; // 민감도 조정 (값이 너무 작으면 스크롤 안 함)
+    private static final int SCROLL_SPEED = 50; // 스크롤 이동량 조정
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         // 🚀 RecyclerView 설정
-        CustomRecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView = findViewById(R.id.recyclerView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         recyclerView.setLayoutManager(layoutManager);
 
@@ -66,53 +67,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    // 📊 그래프 초기 설정
-    private void setupChart() {
-        lineData = new LineData();
-
-        // 3개의 데이터셋 (Yaw, Pitch, Roll)
-        lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 빨간색
-        lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 초록색
-        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));  // 파란색
-
-        chart.setData(lineData);
-        chart.getDescription().setEnabled(false);
-        chart.setTouchEnabled(true);
-        chart.setDragEnabled(true);
-        chart.setScaleEnabled(true);
-
-        // X축 설정 (시간 흐름)
-        XAxis xAxis = chart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setDrawGridLines(false);
-
-        // Y축 설정
-        YAxis leftAxis = chart.getAxisLeft();
-        leftAxis.setAxisMinimum(-5f);
-        leftAxis.setAxisMaximum(5f);
-        chart.getAxisRight().setEnabled(false);
-
-        // 범례 설정
-        Legend legend = chart.getLegend();
-        legend.setForm(Legend.LegendForm.LINE);
-    }
-
-    // 📊 데이터셋 생성
-    private LineDataSet createDataSet(String label, int color) {
-        LineDataSet dataSet = new LineDataSet(new ArrayList<>(), label);
-        dataSet.setColor(color);
-        dataSet.setLineWidth(2f);
-        dataSet.setDrawCircles(false);
-        dataSet.setMode(LineDataSet.Mode.LINEAR);
-        return dataSet;
-    }
-
     // 📡 센서 데이터 업데이트
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             float yaw = event.values[0];
-            float pitch = event.values[1];
+            float pitch = event.values[1]; // PITCH (X축)
             float roll = event.values[2];
 
             // 📝 센서 값 업데이트
@@ -120,10 +80,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             // 📊 그래프에 데이터 추가
             addEntry(yaw, pitch, roll);
+
+            // 🚀 PITCH 값으로 RecyclerView 스크롤
+            handleGyroScroll(pitch);
         }
     }
 
-    // 📊 그래프에 데이터 추가
+    // 📊 그래프 데이터 추가
     private void addEntry(float yaw, float pitch, float roll) {
         LineData data = chart.getData();
         if (data != null) {
@@ -137,6 +100,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    // 🚀 PITCH 값에 따라 RecyclerView 스크롤 조절
+    private void handleGyroScroll(float pitch) {
+        float pitchChange = pitch - lastPitch; // 이전 값과 비교하여 변화량 측정
+        lastPitch = pitch;
+
+        if (Math.abs(pitchChange) > PITCH_THRESHOLD) {
+            int scrollAmount = (int) (SCROLL_SPEED * pitchChange);
+            recyclerView.smoothScrollBy(scrollAmount, 0); // 🚀 좌우 스크롤 적용
+        }
+    }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    // 📊 그래프 초기 설정
+    private void setupChart() {
+        lineData = new LineData();
+        lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 🔴 빨간색
+        lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 🟢 초록색
+        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));  // 🔵 파란색
+
+        chart.setData(lineData);
+        chart.getDescription().setEnabled(false);
+        chart.setTouchEnabled(true);
+        chart.setDragEnabled(true);
+        chart.setScaleEnabled(true);
+    }
+
+    private LineDataSet createDataSet(String label, int color) {
+        LineDataSet dataSet = new LineDataSet(new ArrayList<>(), label);
+        dataSet.setColor(color);
+        dataSet.setLineWidth(2f);
+        dataSet.setDrawCircles(false);
+        dataSet.setMode(LineDataSet.Mode.LINEAR);
+        return dataSet;
+    }
 }
