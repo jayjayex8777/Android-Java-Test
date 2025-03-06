@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:background="@android:color/white">
 
-    <!-- 🚀 가로 스크롤을 위한 커스텀 RecyclerView -->
+    <!-- 🚀 가로 스크롤 RecyclerView -->
     <com.example.objectselect1.CustomRecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
@@ -13,4 +13,22 @@
         android:layout_marginTop="100dp"
         android:padding="10dp"
         android:clipToPadding="false" />
+
+    <!-- 📌 센서 값 표시 -->
+    <TextView
+        android:id="@+id/sensorValues"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Yaw: 0.0 | Pitch: 0.0 | Roll: 0.0"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:gravity="center" />
+
+    <!-- 📊 그래프 -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_margin="10dp" />
 </LinearLayout>
