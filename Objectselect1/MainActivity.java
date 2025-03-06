@@ -28,19 +28,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int timeIndex = 0;
 
     private CustomRecyclerView recyclerView;
-    private float accumulatedPitch = 0f; // 📌 Pitch 변화량 누적
-    private static final float PITCH_THRESHOLD = 0.02f; // 📌 감도 조정
-    private static final int SCROLL_SPEED = 300; // 📌 스크롤 속도 증가
-    private static final float PITCH_DECAY = 0.98f; // 📌 감속 효과
+    private float accumulatedPitch = 0f;
+    private static final float PITCH_THRESHOLD = 0.02f;
+    private static final int SCROLL_SPEED = 300;
+    private static final float PITCH_DECAY = 0.98f;
 
     private final Handler handler = new Handler();
     private final Runnable decayRunnable = new Runnable() {
         @Override
         public void run() {
             if (Math.abs(accumulatedPitch) > 0.01f) {
-                accumulatedPitch *= PITCH_DECAY; // 📌 점진적으로 감소
+                accumulatedPitch *= PITCH_DECAY;
                 handleGyroScroll(accumulatedPitch);
-                handler.postDelayed(this, 50); // 50ms마다 감속 적용
+                handler.postDelayed(this, 50);
             }
         }
     };
@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
             recyclerView.setLayoutManager(layoutManager);
 
-            // 숫자 리스트 (1~10)
             List<Integer> numbers = new ArrayList<>();
             for (int i = 1; i <= 10; i++) {
                 numbers.add(i);
@@ -65,9 +64,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             RectangleAdapter adapter = new RectangleAdapter(this, numbers);
             recyclerView.setAdapter(adapter);
 
-            // SnapHelper 적용
             SnapHelper snapHelper = new LinearSnapHelper();
             snapHelper.attachToRecyclerView(recyclerView);
+        } else {
+            throw new NullPointerException("RecyclerView is null! Check activity_main.xml.");
         }
 
         // 📌 센서 값 표시 TextView
@@ -82,41 +82,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (sensorManager != null) {
             gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if (gyroscopeSensor != null) {
-                // 📌 센서 업데이트 속도를 가장 빠르게 설정 (SENSOR_DELAY_FASTEST)
                 sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_FASTEST);
             } else {
                 sensorValues.setText("Gyroscope Sensor Not Available");
             }
+        } else {
+            throw new NullPointerException("SensorManager is null! Check system services.");
         }
 
-        // 📌 감속 Runnable 시작
         handler.post(decayRunnable);
     }
 
-    // 📡 센서 데이터 업데이트
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             float yaw = event.values[0];
-            float pitch = event.values[1]; // PITCH (X축)
+            float pitch = event.values[1];
             float roll = event.values[2];
 
-            // 📝 센서 값 업데이트
             sensorValues.setText(String.format("Yaw: %.2f | Pitch: %.2f | Roll: %.2f", yaw, pitch, roll));
 
-            // 📊 그래프에 데이터 추가
             addEntry(yaw, pitch, roll);
 
-            // 🚀 PITCH 값 누적하여 RecyclerView 스크롤
             accumulatedPitch += pitch;
             handleGyroScroll(accumulatedPitch);
         }
     }
 
-    // 📊 그래프 데이터 추가
     private void addEntry(float yaw, float pitch, float roll) {
+        if (chart.getData() == null) {
+            return;
+        }
         LineData data = chart.getData();
-        if (data != null) {
+        if (data.getDataSetCount() > 2) {
             data.getDataSetByIndex(0).addEntry(new Entry(timeIndex, yaw));
             data.getDataSetByIndex(1).addEntry(new Entry(timeIndex, pitch));
             data.getDataSetByIndex(2).addEntry(new Entry(timeIndex, roll));
@@ -127,7 +125,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    // 🚀 PITCH 값에 따라 RecyclerView 스크롤 조절 (감속 효과 추가)
     private void handleGyroScroll(float pitch) {
         if (recyclerView != null && Math.abs(pitch) > PITCH_THRESHOLD) {
             int scrollAmount = (int) (SCROLL_SPEED * pitch);
@@ -144,15 +141,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
         }
-        handler.removeCallbacks(decayRunnable); // 📌 감속 핸들러 제거
+        handler.removeCallbacks(decayRunnable);
     }
 
-    // 📊 그래프 초기 설정
     private void setupChart() {
         lineData = new LineData();
-        lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 🔴 빨간색
-        lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 🟢 초록색
-        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA"));  // 🔵 파란색
+        lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));
+        lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00));
+        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));
 
         chart.setData(lineData);
         chart.getDescription().setEnabled(false);
