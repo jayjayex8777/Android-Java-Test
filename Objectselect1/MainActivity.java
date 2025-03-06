@@ -10,6 +10,9 @@ import android.os.Handler;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSnapHelper;
+import androidx.recyclerview.widget.SnapHelper;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -28,8 +31,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private LineData lineData;
     private int timeIndex = 0;
 
+    private CustomRecyclerView recyclerView;
     private final Handler handler = new Handler();
-    private static final int TIME_WINDOW_MS = 10; // 📌 10ms 단위로 Time Window 생성
+    private static final int TIME_WINDOW_MS = 10;
     private final ArrayList<Float> yawValues = new ArrayList<>();
     private final ArrayList<Float> pitchValues = new ArrayList<>();
     private final ArrayList<Float> rollValues = new ArrayList<>();
@@ -38,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         @Override
         public void run() {
             processTimeWindow();
-            handler.postDelayed(this, TIME_WINDOW_MS); // 📌 10ms마다 실행
+            handler.postDelayed(this, TIME_WINDOW_MS);
         }
     };
 
@@ -47,6 +51,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        // 🚀 RecyclerView 설정 (Rectangle Object 리스트)
+        recyclerView = findViewById(R.id.recyclerView);
+        if (recyclerView != null) {
+            LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+            recyclerView.setLayoutManager(layoutManager);
+
+            List<Integer> numbers = new ArrayList<>();
+            for (int i = 1; i <= 30; i++) {  // ✅ 30개로 변경
+                numbers.add(i);
+            }
+            RectangleAdapter adapter = new RectangleAdapter(this, numbers);
+            recyclerView.setAdapter(adapter);
+
+            // 스냅 도우미 추가 (플링 시 자연스럽게 정렬)
+            SnapHelper snapHelper = new LinearSnapHelper();
+            snapHelper.attachToRecyclerView(recyclerView);
+        }
 
         // 📌 센서 값 표시 TextView
         sensorValues = findViewById(R.id.sensorValues);
@@ -89,15 +111,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void processTimeWindow() {
         if (!yawValues.isEmpty() && !pitchValues.isEmpty() && !rollValues.isEmpty()) {
-            // 📌 평균 변화량 계산
             float avgYaw = calculateAverage(yawValues);
             float avgPitch = calculateAverage(pitchValues);
             float avgRoll = calculateAverage(rollValues);
 
-            // 📌 그래프 업데이트
             addEntry(avgYaw, avgPitch, avgRoll);
 
-            // 📌 Time Window 데이터 초기화
             yawValues.clear();
             pitchValues.clear();
             rollValues.clear();
@@ -153,18 +172,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         chart.setDragEnabled(true);
         chart.setScaleEnabled(true);
 
-        // X축 설정
         XAxis xAxis = chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
 
-        // Y축 설정
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setAxisMinimum(-5f);
         leftAxis.setAxisMaximum(5f);
         chart.getAxisRight().setEnabled(false);
 
-        // 범례 설정
         Legend legend = chart.getLegend();
         legend.setForm(Legend.LegendForm.LINE);
     }
