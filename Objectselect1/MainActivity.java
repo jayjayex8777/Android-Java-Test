@@ -12,8 +12,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.SnapHelper;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private CustomRecyclerView recyclerView;
     private float lastPitch = 0f;  // 이전 Pitch 값 저장
-    private static final float PITCH_THRESHOLD = 0.1f; // 민감도 조정 (값이 너무 작으면 스크롤 안 함)
+    private static final float PITCH_THRESHOLD = 0.1f; // 민감도 조정
     private static final int SCROLL_SPEED = 50; // 스크롤 이동량 조정
 
     @Override
@@ -117,17 +121,37 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // 📊 그래프 초기 설정
     private void setupChart() {
         lineData = new LineData();
-        lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 🔴 빨간색
-        lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 🟢 초록색
-        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));  // 🔵 파란색
+
+        // 📌 Null 체크 후 데이터셋 추가
+        if (lineData != null) {
+            lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 🔴 빨간색
+            lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 🟢 초록색
+            lineData.addDataSet(createDataSet("Roll", 0xFF0000AA"));  // 🔵 파란색
+        }
 
         chart.setData(lineData);
         chart.getDescription().setEnabled(false);
         chart.setTouchEnabled(true);
         chart.setDragEnabled(true);
         chart.setScaleEnabled(true);
+
+        // X축 설정
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+
+        // Y축 설정
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setAxisMinimum(-5f);
+        leftAxis.setAxisMaximum(5f);
+        chart.getAxisRight().setEnabled(false);
+
+        // 범례 설정
+        Legend legend = chart.getLegend();
+        legend.setForm(Legend.LegendForm.LINE);
     }
 
+    // 📌 `LineDataSet` 생성 함수 수정 (올바른 반환 타입 적용)
     private LineDataSet createDataSet(String label, int color) {
         LineDataSet dataSet = new LineDataSet(new ArrayList<>(), label);
         dataSet.setColor(color);
