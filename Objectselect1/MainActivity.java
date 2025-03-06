@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             RectangleAdapter adapter = new RectangleAdapter(this, numbers);
             recyclerView.setAdapter(adapter);
 
-            // ✅ SnapHelper 유지 (너무 급격하게 멈추지 않도록 함)
+            // ✅ SnapHelper 유지 (너무 급격하게 멈추지 않도록 설정)
             SnapHelper snapHelper = new LinearSnapHelper();
             snapHelper.attachToRecyclerView(recyclerView);
         }
@@ -157,5 +157,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             sensorManager.unregisterListener(this);
         }
         handler.removeCallbacks(timeWindowRunnable);
+    }
+
+    // 📊 그래프 초기 설정
+    private void setupChart() {
+        lineData = new LineData();
+        lineData.addDataSet(createDataSet("Yaw", 0xFFAA0000));  // 🔴 빨간색
+        lineData.addDataSet(createDataSet("Pitch", 0xFF00AA00)); // 🟢 초록색
+        lineData.addDataSet(createDataSet("Roll", 0xFF0000AA));  // 🔵 파란색
+
+        chart.setData(lineData);
+        chart.getDescription().setEnabled(false);
+        chart.setTouchEnabled(true);
+        chart.setDragEnabled(true);
+        chart.setScaleEnabled(true);
+
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setAxisMinimum(-5f);
+        leftAxis.setAxisMaximum(5f);
+        chart.getAxisRight().setEnabled(false);
+
+        Legend legend = chart.getLegend();
+        legend.setForm(Legend.LegendForm.LINE);
+    }
+
+    private LineDataSet createDataSet(String label, int color) {
+        LineDataSet dataSet = new LineDataSet(new ArrayList<>(), label);
+        dataSet.setColor(color);
+        dataSet.setLineWidth(2f);
+        dataSet.setDrawCircles(false);
+        dataSet.setMode(LineDataSet.Mode.LINEAR);
+        return dataSet;
     }
 }
