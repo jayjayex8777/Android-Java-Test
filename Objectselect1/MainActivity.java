@@ -33,6 +33,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private CustomRecyclerView recyclerView;
     private final Handler handler = new Handler();
     private static final int TIME_WINDOW_MS = 10;
+    private static final float SCROLL_SENSITIVITY = 2000f; // ✅ 스크롤 감도 조정
+    private static final float MIN_SCROLL_THRESHOLD = 0.02f; // ✅ 불필요한 움직임 방지
+
     private final ArrayList<Float> yawValues = new ArrayList<>();
     private final ArrayList<Float> pitchValues = new ArrayList<>();
     private final ArrayList<Float> rollValues = new ArrayList<>();
@@ -56,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (recyclerView != null) {
             CustomFlingLinearLayoutManager layoutManager = new CustomFlingLinearLayoutManager(this);
             recyclerView.setLayoutManager(layoutManager);
-            recyclerView.setOverScrollMode(CustomRecyclerView.OVER_SCROLL_NEVER); // ✅ 오버스크롤 제거
+            recyclerView.setOverScrollMode(CustomRecyclerView.OVER_SCROLL_NEVER); 
 
             List<Integer> numbers = new ArrayList<>();
             for (int i = 1; i <= 30; i++) {  
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             RectangleAdapter adapter = new RectangleAdapter(this, numbers);
             recyclerView.setAdapter(adapter);
 
-            // ✅ SnapHelper 유지 (너무 급격하게 멈추지 않도록 설정)
+            // ✅ SnapHelper 유지
             SnapHelper snapHelper = new LinearSnapHelper();
             snapHelper.attachToRecyclerView(recyclerView);
         }
@@ -99,13 +102,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float pitch = event.values[1];
             float roll = event.values[2];
 
-            // 📌 센서 값 표시
             sensorValues.setText(String.format("Yaw: %.2f | Pitch: %.2f | Roll: %.2f", yaw, pitch, roll));
 
-            // 📌 Time Window 내 데이터 수집
             yawValues.add(yaw);
             pitchValues.add(pitch);
             rollValues.add(roll);
+
+            // 📌 PITCH 변화량을 이용한 스크롤 (불필요한 떨림 방지)
+            if (Math.abs(pitch) > MIN_SCROLL_THRESHOLD) {
+                recyclerView.smoothScrollBy((int) (pitch * SCROLL_SENSITIVITY), 0);
+            }
         }
     }
 
@@ -147,18 +153,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(this);
-        }
-        handler.removeCallbacks(timeWindowRunnable);
-    }
-
     // 📊 그래프 초기 설정
     private void setupChart() {
         lineData = new LineData();
@@ -192,5 +186,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         dataSet.setDrawCircles(false);
         dataSet.setMode(LineDataSet.Mode.LINEAR);
         return dataSet;
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+        handler.removeCallbacks(timeWindowRunnable);
     }
 }
