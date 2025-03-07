@@ -45,4 +45,18 @@
             android:typeface="monospace"/>
     </LinearLayout>
 
+    <!-- 자이로 센서 수평 그래프 -->
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/gyroGraph"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp"/>
+
+    <!-- 가속도 센서 수평 그래프 -->
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/accelGraph"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp"/>
+    
 </LinearLayout>
