@@ -11,6 +11,9 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +23,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor accelerometer, gyroscope;
     private TextView gyroTextView, accelTextView;
     
+    private GraphView gyroGraph, accelGraph;
+    private LineGraphSeries<DataPoint> gyroYawSeries, gyroPitchSeries, gyroRollSeries;
+    private LineGraphSeries<DataPoint> accelXSeries, accelYSeries, accelZSeries;
+    
+    private int graphXIndex = 0;
     private long lastUpdateTimeGyro = 0;
     private long lastUpdateTimeAccel = 0;
 
@@ -29,15 +37,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // RecyclerView 설정 (상단 배치)
+        // RecyclerView 설정
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         recyclerView.setLayoutManager(layoutManager);
 
-        // 데이터 생성 (1번부터 30번까지)
+        // 데이터 생성
         List<String> dataList = new ArrayList<>();
         for (int i = 1; i <= 30; i++) {
-            dataList.add(String.valueOf(i));  // 숫자만 표시
+            dataList.add(String.valueOf(i));
         }
 
         // 어댑터 설정
@@ -54,6 +62,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // UI 요소 연결
         gyroTextView = findViewById(R.id.gyroTextView);
         accelTextView = findViewById(R.id.accelTextView);
+        gyroGraph = findViewById(R.id.gyroGraph);
+        accelGraph = findViewById(R.id.accelGraph);
+
+        // 그래프 초기화
+        gyroYawSeries = new LineGraphSeries<>();
+        gyroPitchSeries = new LineGraphSeries<>();
+        gyroRollSeries = new LineGraphSeries<>();
+        gyroGraph.addSeries(gyroYawSeries);
+        gyroGraph.addSeries(gyroPitchSeries);
+        gyroGraph.addSeries(gyroRollSeries);
+
+        accelXSeries = new LineGraphSeries<>();
+        accelYSeries = new LineGraphSeries<>();
+        accelZSeries = new LineGraphSeries<>();
+        accelGraph.addSeries(accelXSeries);
+        accelGraph.addSeries(accelYSeries);
+        accelGraph.addSeries(accelZSeries);
     }
 
     @Override
@@ -70,50 +95,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(this);
-        }
-    }
-
-    @Override
     public void onSensorChanged(SensorEvent event) {
-        long currentTime = System.currentTimeMillis();
+        graphXIndex++;
 
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            float yaw = event.values[0];   // Yaw (Z 축 회전)
-            float pitch = event.values[1]; // Pitch (X 축 회전)
-            float roll = event.values[2];  // Roll (Y 축 회전)
+            float yaw = event.values[0];
+            float pitch = event.values[1];
+            float roll = event.values[2];
 
-            long intervalGyro = (lastUpdateTimeGyro == 0) ? 0 : (currentTime - lastUpdateTimeGyro);
-            lastUpdateTimeGyro = currentTime;
-
-            // 텍스트 길이 고정된 형식
-            String gyroText = String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f | %03d ms", 
-                                            yaw, pitch, roll, intervalGyro);
-            gyroTextView.setText(gyroText);
-            Log.d("SENSOR_UPDATE", "Gyro: " + gyroText);
-        } 
-
-        else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
+            gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
+            gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
+        } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             float accelX = event.values[0];
             float accelY = event.values[1];
             float accelZ = event.values[2];
 
-            long intervalAccel = (lastUpdateTimeAccel == 0) ? 0 : (currentTime - lastUpdateTimeAccel);
-            lastUpdateTimeAccel = currentTime;
-
-            // 텍스트 길이 고정된 형식
-            String accelText = String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f | %03d ms", 
-                                             accelX, accelY, accelZ, intervalAccel);
-            accelTextView.setText(accelText);
-            Log.d("SENSOR_UPDATE", "Accelerometer: " + accelText);
+            accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
+            accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
+            accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
         }
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // 정확도 변경 이벤트는 여기서는 사용하지 않음
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
 }
