@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        super.onCreate();
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
@@ -89,8 +89,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             long intervalGyro = (lastUpdateTimeGyro == 0) ? 0 : (currentTime - lastUpdateTimeGyro);
             lastUpdateTimeGyro = currentTime;
 
-            // UI 및 로그 출력
-            String gyroText = String.format("Yaw: %.2f, Pitch: %.2f, Roll: %.2f | %d ms", yaw, pitch, roll, intervalGyro);
+            // 텍스트 길이 고정된 형식
+            String gyroText = String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f | %03d ms", 
+                                            yaw, pitch, roll, intervalGyro);
             gyroTextView.setText(gyroText);
             Log.d("SENSOR_UPDATE", "Gyro: " + gyroText);
         } 
@@ -103,8 +104,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             long intervalAccel = (lastUpdateTimeAccel == 0) ? 0 : (currentTime - lastUpdateTimeAccel);
             lastUpdateTimeAccel = currentTime;
 
-            // UI 및 로그 출력
-            String accelText = String.format("Accel X: %.2f, Y: %.2f, Z: %.2f | %d ms", accelX, accelY, accelZ, intervalAccel);
+            // 텍스트 길이 고정된 형식
+            String accelText = String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f | %03d ms", 
+                                             accelX, accelY, accelZ, intervalAccel);
             accelTextView.setText(accelText);
             Log.d("SENSOR_UPDATE", "Accelerometer: " + accelText);
         }
