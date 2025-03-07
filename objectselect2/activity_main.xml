@@ -3,14 +3,78 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:padding="16dp">
 
+    <!-- 상단의 RecyclerView (사각형 리스트) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:paddingHorizontal="16dp"
         android:overScrollMode="never"
-        android:scrollbars="none"/>
+        android:scrollbars="none"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- 센서 값 표시 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/yawTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Yaw: 0.00"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="5dp"/>
+
+        <TextView
+            android:id="@+id/pitchTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pitch: 0.00"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="5dp"/>
+
+        <TextView
+            android:id="@+id/rollTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Roll: 0.00"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="5dp"/>
+
+        <TextView
+            android:id="@+id/accelXTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accel X: 0.00"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="5dp"/>
+
+        <TextView
+            android:id="@+id/accelYTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accel Y: 0.00"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="5dp"/>
+
+        <TextView
+            android:id="@+id/accelZTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accel Z: 0.00"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="5dp"/>
+    </LinearLayout>
+
 </LinearLayout>
