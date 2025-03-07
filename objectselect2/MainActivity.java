@@ -5,6 +5,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor accelerometer, gyroscope;
     private TextView yawTextView, pitchTextView, rollTextView;
     private TextView accelXTextView, accelYTextView, accelZTextView;
+    
+    private long lastUpdateTimeGyro = 0;
+    private long lastUpdateTimeAccel = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        long currentTime = System.currentTimeMillis();
+
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             float yaw = event.values[0];   // Yaw (Z 축 회전)
             float pitch = event.values[1]; // Pitch (X 축 회전)
@@ -88,7 +94,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             yawTextView.setText("Yaw: " + String.format("%.2f", yaw));
             pitchTextView.setText("Pitch: " + String.format("%.2f", pitch));
             rollTextView.setText("Roll: " + String.format("%.2f", roll));
-        } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+
+            // 주기 계산 및 로그 출력
+            if (lastUpdateTimeGyro != 0) {
+                long interval = currentTime - lastUpdateTimeGyro;
+                Log.d("SENSOR_UPDATE", "Gyro Sensor Update Interval: " + interval + " ms");
+            }
+            lastUpdateTimeGyro = currentTime;
+        } 
+
+        else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             float accelX = event.values[0];
             float accelY = event.values[1];
             float accelZ = event.values[2];
@@ -96,6 +111,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             accelXTextView.setText("Accel X: " + String.format("%.2f", accelX));
             accelYTextView.setText("Accel Y: " + String.format("%.2f", accelY));
             accelZTextView.setText("Accel Z: " + String.format("%.2f", accelZ));
+
+            // 주기 계산 및 로그 출력
+            if (lastUpdateTimeAccel != 0) {
+                long interval = currentTime - lastUpdateTimeAccel;
+                Log.d("SENSOR_UPDATE", "Accelerometer Sensor Update Interval: " + interval + " ms");
+            }
+            lastUpdateTimeAccel = currentTime;
         }
     }
 
