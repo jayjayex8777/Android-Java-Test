@@ -29,7 +29,8 @@
             android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00 | 000 ms"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:padding="5dp"/>
+            android:padding="5dp"
+            android:typeface="monospace"/>
 
         <TextView
             android:id="@+id/accelTextView"
@@ -38,7 +39,8 @@
             android:text="Accel X: +00.00, Y: +00.00, Z: +00.00 | 000 ms"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:padding="5dp"/>
+            android:padding="5dp"
+            android:typeface="monospace"/>
     </LinearLayout>
 
 </LinearLayout>
