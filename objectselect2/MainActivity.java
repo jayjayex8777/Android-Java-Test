@@ -18,8 +18,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SensorManager sensorManager;
     private Sensor accelerometer, gyroscope;
-    private TextView yawTextView, pitchTextView, rollTextView;
-    private TextView accelXTextView, accelYTextView, accelZTextView;
+    private TextView gyroTextView, accelTextView;
     
     private long lastUpdateTimeGyro = 0;
     private long lastUpdateTimeAccel = 0;
@@ -53,12 +52,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         // UI 요소 연결
-        yawTextView = findViewById(R.id.yawTextView);
-        pitchTextView = findViewById(R.id.pitchTextView);
-        rollTextView = findViewById(R.id.rollTextView);
-        accelXTextView = findViewById(R.id.accelXTextView);
-        accelYTextView = findViewById(R.id.accelYTextView);
-        accelZTextView = findViewById(R.id.accelZTextView);
+        gyroTextView = findViewById(R.id.gyroTextView);
+        accelTextView = findViewById(R.id.accelTextView);
     }
 
     @Override
@@ -91,16 +86,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float pitch = event.values[1]; // Pitch (X 축 회전)
             float roll = event.values[2];  // Roll (Y 축 회전)
 
-            yawTextView.setText("Yaw: " + String.format("%.2f", yaw));
-            pitchTextView.setText("Pitch: " + String.format("%.2f", pitch));
-            rollTextView.setText("Roll: " + String.format("%.2f", roll));
-
-            // 주기 계산 및 로그 출력
-            if (lastUpdateTimeGyro != 0) {
-                long interval = currentTime - lastUpdateTimeGyro;
-                Log.d("SENSOR_UPDATE", "Gyro Sensor Update Interval: " + interval + " ms");
-            }
+            long intervalGyro = (lastUpdateTimeGyro == 0) ? 0 : (currentTime - lastUpdateTimeGyro);
             lastUpdateTimeGyro = currentTime;
+
+            // UI 및 로그 출력
+            String gyroText = String.format("Yaw: %.2f, Pitch: %.2f, Roll: %.2f | %d ms", yaw, pitch, roll, intervalGyro);
+            gyroTextView.setText(gyroText);
+            Log.d("SENSOR_UPDATE", "Gyro: " + gyroText);
         } 
 
         else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -108,16 +100,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float accelY = event.values[1];
             float accelZ = event.values[2];
 
-            accelXTextView.setText("Accel X: " + String.format("%.2f", accelX));
-            accelYTextView.setText("Accel Y: " + String.format("%.2f", accelY));
-            accelZTextView.setText("Accel Z: " + String.format("%.2f", accelZ));
-
-            // 주기 계산 및 로그 출력
-            if (lastUpdateTimeAccel != 0) {
-                long interval = currentTime - lastUpdateTimeAccel;
-                Log.d("SENSOR_UPDATE", "Accelerometer Sensor Update Interval: " + interval + " ms");
-            }
+            long intervalAccel = (lastUpdateTimeAccel == 0) ? 0 : (currentTime - lastUpdateTimeAccel);
             lastUpdateTimeAccel = currentTime;
+
+            // UI 및 로그 출력
+            String accelText = String.format("Accel X: %.2f, Y: %.2f, Z: %.2f | %d ms", accelX, accelY, accelZ, intervalAccel);
+            accelTextView.setText(accelText);
+            Log.d("SENSOR_UPDATE", "Accelerometer: " + accelText);
         }
     }
 
