@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="top"   <!-- 추가: 전체를 위로 올림 -->
-    android:padding="4dp">  <!-- 패딩을 줄여서 더 위로 올림 -->
+    android:gravity="top"   <!-- 전체 UI를 위로 정렬 -->
+    android:padding="8dp">
 
     <!-- 상단의 RecyclerView (사각형 리스트) -->
     <androidx.recyclerview.widget.RecyclerView
@@ -14,15 +14,15 @@
         android:overScrollMode="never"
         android:scrollbars="none"
         android:layout_marginTop="50dp"  <!-- 위로 올림 -->
-        android:layout_marginBottom="10dp"/> <!-- 아래 여백 감소 -->
+        android:layout_marginBottom="16dp"/> <!-- 센서 값과 간격 조정 -->
 
     <!-- 센서 값 표시 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginTop="10dp"> <!-- 센서 값 영역을 조금 아래로 조정 -->
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp">
 
         <TextView
             android:id="@+id/gyroTextView"
@@ -31,7 +31,7 @@
             android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00 | 000 ms"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:padding="5dp"
+            android:paddingVertical="5dp"
             android:typeface="monospace"/>
 
         <TextView
@@ -41,7 +41,7 @@
             android:text="Accel X: +00.00, Y: +00.00, Z: +00.00 | 000 ms"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:padding="5dp"
+            android:paddingVertical="5dp"
             android:typeface="monospace"/>
     </LinearLayout>
 
