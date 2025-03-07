@@ -28,14 +28,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private LineGraphSeries<DataPoint> accelXSeries, accelYSeries, accelZSeries;
     
     private int graphXIndex = 0;
-    private long lastUpdateTimeGyro = 0;
-    private long lastUpdateTimeAccel = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        // UI 요소 연결
+        gyroTextView = findViewById(R.id.gyroTextView);
+        accelTextView = findViewById(R.id.accelTextView);
+        gyroGraph = findViewById(R.id.gyroGraph);
+        accelGraph = findViewById(R.id.accelGraph);
+
+        // UI 요소가 정상적으로 초기화되었는지 확인
+        if (gyroTextView == null) Log.e("UI_ERROR", "gyroTextView is NULL");
+        if (accelTextView == null) Log.e("UI_ERROR", "accelTextView is NULL");
+        if (gyroGraph == null) Log.e("UI_ERROR", "gyroGraph is NULL");
+        if (accelGraph == null) Log.e("UI_ERROR", "accelGraph is NULL");
 
         // RecyclerView 설정
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
@@ -59,12 +69,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         }
 
-        // UI 요소 연결
-        gyroTextView = findViewById(R.id.gyroTextView);
-        accelTextView = findViewById(R.id.accelTextView);
-        gyroGraph = findViewById(R.id.gyroGraph);
-        accelGraph = findViewById(R.id.accelGraph);
-
         // 그래프 초기화
         gyroYawSeries = new LineGraphSeries<>();
         gyroPitchSeries = new LineGraphSeries<>();
@@ -79,42 +83,59 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelGraph.addSeries(accelXSeries);
         accelGraph.addSeries(accelYSeries);
         accelGraph.addSeries(accelZSeries);
+
+        // 그래프 X축 자동 스크롤 설정
+        gyroGraph.getViewport().setXAxisBoundsManual(true);
+        gyroGraph.getViewport().setMinX(0);
+        gyroGraph.getViewport().setMaxX(100);
+        gyroGraph.getViewport().setScrollable(true);
+
+        accelGraph.getViewport().setXAxisBoundsManual(true);
+        accelGraph.getViewport().setMinX(0);
+        accelGraph.getViewport().setMaxX(100);
+        accelGraph.getViewport().setScrollable(true);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (sensorManager != null) {
-            if (accelerometer != null) {
-                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-            }
             if (gyroscope != null) {
                 sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
+                Log.d("SENSOR_REGISTER", "Gyroscope registered successfully");
+            }
+            if (accelerometer != null) {
+                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+                Log.d("SENSOR_REGISTER", "Accelerometer registered successfully");
             }
         }
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        graphXIndex++;
+        runOnUiThread(() -> {
+            graphXIndex++;
 
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            float yaw = event.values[0];
-            float pitch = event.values[1];
-            float roll = event.values[2];
+            if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                float yaw = event.values[0];
+                float pitch = event.values[1];
+                float roll = event.values[2];
 
-            gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
-            gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
-            gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
-        } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            float accelX = event.values[0];
-            float accelY = event.values[1];
-            float accelZ = event.values[2];
+                gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
+                gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
+                gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
+                gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
+            } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                float accelX = event.values[0];
+                float accelY = event.values[1];
+                float accelZ = event.values[2];
 
-            accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
-            accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
-            accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
-        }
+                accelTextView.setText(String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f", accelX, accelY, accelZ));
+                accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
+                accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
+                accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
+            }
+        });
     }
 
     @Override
