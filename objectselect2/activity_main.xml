@@ -23,55 +23,19 @@
         android:gravity="center">
 
         <TextView
-            android:id="@+id/yawTextView"
+            android:id="@+id/gyroTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Yaw: 0.00"
+            android:text="Yaw: 0.00, Pitch: 0.00, Roll: 0.00 | 0 ms"
             android:textSize="18sp"
             android:textStyle="bold"
             android:padding="5dp"/>
 
         <TextView
-            android:id="@+id/pitchTextView"
+            android:id="@+id/accelTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pitch: 0.00"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:padding="5dp"/>
-
-        <TextView
-            android:id="@+id/rollTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Roll: 0.00"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:padding="5dp"/>
-
-        <TextView
-            android:id="@+id/accelXTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accel X: 0.00"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:padding="5dp"/>
-
-        <TextView
-            android:id="@+id/accelYTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accel Y: 0.00"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:padding="5dp"/>
-
-        <TextView
-            android:id="@+id/accelZTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accel Z: 0.00"
+            android:text="Accel X: 0.00, Y: 0.00, Z: 0.00 | 0 ms"
             android:textSize="18sp"
             android:textStyle="bold"
             android:padding="5dp"/>
