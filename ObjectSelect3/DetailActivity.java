@@ -12,4 +12,7 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         
         String coordinate = getIntent().getStringExtra("coordinate");
-        TextView detailTextView = findViewBy
+        TextView detailTextView = findViewById(R.id.detailTextView);
+        detailTextView.setText(coordinate);
+    }
+}
