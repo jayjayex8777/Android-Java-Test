@@ -1,4 +1,4 @@
-package com.example.objectselect3;
+package com.example.objectselect2;
 
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -7,9 +7,12 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.TextView;
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -32,33 +35,56 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // 센서 및 그래프 UI 연결 (기존 코드 그대로)
+        // UI 요소 연결
         gyroTextView = findViewById(R.id.gyroTextView);
         accelTextView = findViewById(R.id.accelTextView);
         gyroGraph = findViewById(R.id.gyroGraph);
         accelGraph = findViewById(R.id.accelGraph);
 
-        // RecyclerView (30×30 그리드) 설정
+        // RecyclerView 설정
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        // GridLayoutManager로 열(span)을 30개로 설정 → 그리드 형태로 표시됨
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 30);
-        recyclerView.setLayoutManager(gridLayoutManager);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        recyclerView.setLayoutManager(layoutManager);
 
-        // 30×30 데이터 생성 (각 사각형에 X, Y 좌표 표시)
+        // 데이터 생성
         List<String> dataList = new ArrayList<>();
-        for (int y = 0; y < 30; y++) {
-            for (int x = 0; x < 30; x++) {
-                dataList.add("X: " + x + ", Y: " + y);
-            }
+        for (int i = 1; i <= 30; i++) {
+            dataList.add(String.valueOf(i));
         }
 
-        // 어댑터 설정 (RectangleAdapter 수정하여 아이템 터치 시 DetailActivity 전환)
+        // 어댑터 설정
         RectangleAdapter adapter = new RectangleAdapter(dataList);
         recyclerView.setAdapter(adapter);
 
-        // 센서 매니저 및 센서 초기화 (기존 코드 그대로)
+        // 스크롤 관성 때문에 수직 제스처 감지 시 기존 스크롤 중지 처리
+        recyclerView.setOnTouchListener(new View.OnTouchListener() {
+            float lastX, lastY;
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        lastX = event.getX();
+                        lastY = event.getY();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        float dx = event.getX() - lastX;
+                        float dy = event.getY() - lastY;
+                        // 수직 제스처가 뚜렷하면 현재 스크롤 중지
+                        if (Math.abs(dy) > Math.abs(dx)) {
+                            recyclerView.stopScroll();
+                        }
+                        lastX = event.getX();
+                        lastY = event.getY();
+                        break;
+                }
+                return false; // 터치 이벤트는 계속 전달
+            }
+        });
+
+        // 센서 매니저 설정
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -69,9 +95,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroYawSeries = new LineGraphSeries<>();
         gyroPitchSeries = new LineGraphSeries<>();
         gyroRollSeries = new LineGraphSeries<>();
-        gyroYawSeries.setColor(Color.RED);
-        gyroPitchSeries.setColor(Color.GREEN);
-        gyroRollSeries.setColor(Color.BLUE);
+
+        gyroYawSeries.setColor(Color.RED);    // Yaw - 빨간색
+        gyroPitchSeries.setColor(Color.GREEN); // Pitch - 초록색
+        gyroRollSeries.setColor(Color.BLUE);   // Roll - 파란색
+
         gyroGraph.addSeries(gyroYawSeries);
         gyroGraph.addSeries(gyroPitchSeries);
         gyroGraph.addSeries(gyroRollSeries);
@@ -80,9 +108,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelXSeries = new LineGraphSeries<>();
         accelYSeries = new LineGraphSeries<>();
         accelZSeries = new LineGraphSeries<>();
-        accelXSeries.setColor(Color.RED);
-        accelYSeries.setColor(Color.GREEN);
-        accelZSeries.setColor(Color.BLUE);
+
+        accelXSeries.setColor(Color.RED);    // Accel X - 빨간색
+        accelYSeries.setColor(Color.GREEN); // Accel Y - 초록색
+        accelZSeries.setColor(Color.BLUE);   // Accel Z - 파란색
+
         accelGraph.addSeries(accelXSeries);
         accelGraph.addSeries(accelYSeries);
         accelGraph.addSeries(accelZSeries);
