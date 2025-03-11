@@ -1,4 +1,4 @@
-package com.example.objectselect2;
+package com.example.objectselect3;
 
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -12,7 +12,7 @@ import android.view.View;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -38,28 +38,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // UI 요소 연결
+        // 센서 및 그래프 UI 연결
         gyroTextView = findViewById(R.id.gyroTextView);
         accelTextView = findViewById(R.id.accelTextView);
         gyroGraph = findViewById(R.id.gyroGraph);
         accelGraph = findViewById(R.id.accelGraph);
 
-        // RecyclerView 설정
+        // RecyclerView 설정 (30×30 그리드)
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        recyclerView.setLayoutManager(layoutManager);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 30);
+        recyclerView.setLayoutManager(gridLayoutManager);
 
-        // 데이터 생성
+        // 30×30 데이터 생성 (각 사각형에 X, Y 좌표 표시)
         List<String> dataList = new ArrayList<>();
-        for (int i = 1; i <= 30; i++) {
-            dataList.add(String.valueOf(i));
+        for (int y = 0; y < 30; y++) {
+            for (int x = 0; x < 30; x++) {
+                dataList.add("X: " + x + ", Y: " + y);
+            }
         }
 
         // 어댑터 설정
         RectangleAdapter adapter = new RectangleAdapter(dataList);
         recyclerView.setAdapter(adapter);
 
-        // 스크롤 관성 때문에 수직 제스처 감지 시 기존 스크롤 중지 처리
+        // 터치 이벤트 리스너 추가: 수평 스크롤 후 수직 제스처 시 기존 관성을 중지
         recyclerView.setOnTouchListener(new View.OnTouchListener() {
             float lastX, lastY;
             @Override
@@ -72,15 +74,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     case MotionEvent.ACTION_MOVE:
                         float dx = event.getX() - lastX;
                         float dy = event.getY() - lastY;
-                        // 수직 제스처가 뚜렷하면 현재 스크롤 중지
-                        if (Math.abs(dy) > Math.abs(dx)) {
+                        if (Math.abs(dy) > Math.abs(dx)) {  // 수직 제스처일 경우
                             recyclerView.stopScroll();
                         }
                         lastX = event.getX();
                         lastY = event.getY();
                         break;
                 }
-                return false; // 터치 이벤트는 계속 전달
+                return false; // 이벤트를 계속해서 전달
             }
         });
 
@@ -97,8 +98,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroRollSeries = new LineGraphSeries<>();
 
         gyroYawSeries.setColor(Color.RED);    // Yaw - 빨간색
-        gyroPitchSeries.setColor(Color.GREEN); // Pitch - 초록색
-        gyroRollSeries.setColor(Color.BLUE);   // Roll - 파란색
+        gyroPitchSeries.setColor(Color.GREEN);  // Pitch - 초록색
+        gyroRollSeries.setColor(Color.BLUE);    // Roll - 파란색
 
         gyroGraph.addSeries(gyroYawSeries);
         gyroGraph.addSeries(gyroPitchSeries);
@@ -109,9 +110,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelYSeries = new LineGraphSeries<>();
         accelZSeries = new LineGraphSeries<>();
 
-        accelXSeries.setColor(Color.RED);    // Accel X - 빨간색
-        accelYSeries.setColor(Color.GREEN); // Accel Y - 초록색
-        accelZSeries.setColor(Color.BLUE);   // Accel Z - 파란색
+        accelXSeries.setColor(Color.RED);       // Accel X - 빨간색
+        accelYSeries.setColor(Color.GREEN);     // Accel Y - 초록색
+        accelZSeries.setColor(Color.BLUE);      // Accel Z - 파란색
 
         accelGraph.addSeries(accelXSeries);
         accelGraph.addSeries(accelYSeries);
@@ -157,7 +158,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 float yaw = event.values[0];
                 float pitch = event.values[1];
                 float roll = event.values[2];
-
                 gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
                 gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
                 gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
@@ -166,7 +166,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 float accelX = event.values[0];
                 float accelY = event.values[1];
                 float accelZ = event.values[2];
-
                 accelTextView.setText(String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f", accelX, accelY, accelZ));
                 accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
                 accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
