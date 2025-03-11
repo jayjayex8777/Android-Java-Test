@@ -5,25 +5,17 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <!-- 스크롤 가능한 그리드 영역 -->
-    <HorizontalScrollView
+    <!-- TwoDScrollView를 사용한 2차원 스크롤 영역 -->
+    <com.example.objectselect3.TwoDScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="horizontal"
-        android:fillViewport="true">
-        <ScrollView
+        android:layout_height="300dp">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
             android:layout_width="wrap_content"
-            android:layout_height="300dp"
-            android:scrollbars="vertical"
-            android:fillViewport="true">
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </ScrollView>
-    </HorizontalScrollView>
+            android:layout_height="wrap_content"/>
+    </com.example.objectselect3.TwoDScrollView>
 
-    <!-- 센서 데이터 표시 영역 (아래쪽에 배치하여 겹치지 않도록) -->
+    <!-- 센서 데이터 표시 영역 (아래쪽에 배치) -->
     <TextView
         android:id="@+id/gyroTextView"
         android:layout_width="wrap_content"
