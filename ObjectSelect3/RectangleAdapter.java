@@ -1,7 +1,5 @@
-package com.example.objectselect3;
+package com.example.objectselect2;
 
-import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,16 +24,7 @@ public class RectangleAdapter extends RecyclerView.Adapter<RectangleAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String coordinate = dataList.get(position);
-        holder.textView.setText(coordinate);
-
-        // 아이템 클릭 시 DetailActivity로 전환하여 해당 좌표를 크게 표시
-        holder.itemView.setOnClickListener(v -> {
-            Context context = v.getContext();
-            Intent intent = new Intent(context, DetailActivity.class);
-            intent.putExtra("coordinate", coordinate);
-            context.startActivity(intent);
-        });
+        holder.textView.setText(dataList.get(position));
     }
 
     @Override
