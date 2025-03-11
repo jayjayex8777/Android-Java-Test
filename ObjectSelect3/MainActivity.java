@@ -57,11 +57,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         }
 
-        // 어댑터 설정
+        // 어댑터 설정 (터치 시 DetailActivity 전환)
         RectangleAdapter adapter = new RectangleAdapter(dataList);
         recyclerView.setAdapter(adapter);
 
-        // 터치 이벤트 리스너 추가: 수평 스크롤 후 수직 제스처 시 기존 관성을 중지
+        // 터치 이벤트 리스너 추가: 수평 스크롤 중에도 수직 제스처가 바로 반응하도록 기존 관성을 중지
         recyclerView.setOnTouchListener(new View.OnTouchListener() {
             float lastX, lastY;
             @Override
@@ -74,14 +74,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     case MotionEvent.ACTION_MOVE:
                         float dx = event.getX() - lastX;
                         float dy = event.getY() - lastY;
-                        if (Math.abs(dy) > Math.abs(dx)) {  // 수직 제스처일 경우
+                        if (Math.abs(dy) > Math.abs(dx)) {  // 수직 제스처로 판단되면
                             recyclerView.stopScroll();
                         }
                         lastX = event.getX();
                         lastY = event.getY();
                         break;
                 }
-                return false; // 이벤트를 계속해서 전달
+                return false; // 이벤트를 하위 뷰에 전달
             }
         });
 
@@ -97,9 +97,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroPitchSeries = new LineGraphSeries<>();
         gyroRollSeries = new LineGraphSeries<>();
 
-        gyroYawSeries.setColor(Color.RED);    // Yaw - 빨간색
-        gyroPitchSeries.setColor(Color.GREEN);  // Pitch - 초록색
-        gyroRollSeries.setColor(Color.BLUE);    // Roll - 파란색
+        gyroYawSeries.setColor(Color.RED);
+        gyroPitchSeries.setColor(Color.GREEN);
+        gyroRollSeries.setColor(Color.BLUE);
 
         gyroGraph.addSeries(gyroYawSeries);
         gyroGraph.addSeries(gyroPitchSeries);
@@ -110,9 +110,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelYSeries = new LineGraphSeries<>();
         accelZSeries = new LineGraphSeries<>();
 
-        accelXSeries.setColor(Color.RED);       // Accel X - 빨간색
-        accelYSeries.setColor(Color.GREEN);     // Accel Y - 초록색
-        accelZSeries.setColor(Color.BLUE);      // Accel Z - 파란색
+        accelXSeries.setColor(Color.RED);
+        accelYSeries.setColor(Color.GREEN);
+        accelZSeries.setColor(Color.BLUE);
 
         accelGraph.addSeries(accelXSeries);
         accelGraph.addSeries(accelYSeries);
@@ -153,7 +153,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         runOnUiThread(() -> {
             graphXIndex++;
-
             if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 float yaw = event.values[0];
                 float pitch = event.values[1];
