@@ -3,22 +3,35 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="top"
     android:padding="8dp">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+    <!-- 2차원 스크롤 영역: HorizontalScrollView와 ScrollView로 감싸서 좌우/상하 스크롤 지원 -->
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"/>
+        android:fillViewport="true"
+        android:scrollbars="horizontal">
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="300dp"
+            android:fillViewport="true"
+            android:scrollbars="vertical">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </ScrollView>
+    </HorizontalScrollView>
 
+    <!-- 센서 데이터 표시 영역 -->
     <TextView
         android:id="@+id/gyroTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00"
         android:textSize="14sp"
-        android:paddingVertical="5dp"/>
+        android:paddingVertical="5dp"
+        android:layout_marginTop="16dp"/>
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/gyroGraph"
@@ -32,7 +45,8 @@
         android:layout_height="wrap_content"
         android:text="Accel X: +00.00, Y: +00.00, Z: +00.00"
         android:textSize="14sp"
-        android:paddingVertical="5dp"/>
+        android:paddingVertical="5dp"
+        android:layout_marginTop="16dp"/>
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/accelGraph"
