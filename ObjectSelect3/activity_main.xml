@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="top"
+    android:padding="8dp">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"/>
+
+    <TextView
+        android:id="@+id/gyroTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00"
+        android:textSize="14sp"
+        android:paddingVertical="5dp"/>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/gyroGraph"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/accelTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Accel X: +00.00, Y: +00.00, Z: +00.00"
+        android:textSize="14sp"
+        android:paddingVertical="5dp"/>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/accelGraph"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp"/>
+
+</LinearLayout>
