@@ -1,4 +1,4 @@
-package com.example.objectselect2;
+package com.example.objectselect3;
 
 import android.graphics.Color;
 import android.hardware.Sensor;
