@@ -63,6 +63,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (sensorManager != null) {
+            if (gyroscope != null) {
+                sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
+                Log.d("SENSOR_REGISTER", "Gyroscope registered successfully");
+            }
+            if (accelerometer != null) {
+                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+                Log.d("SENSOR_REGISTER", "Accelerometer registered successfully");
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+    }
+
+    @Override
     public void onSensorChanged(SensorEvent event) {  
         graphXIndex++; 
 
@@ -102,5 +125,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
             });
         }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // 정확도 변경 이벤트는 사용하지 않으므로, 메서드만 구현
+        Log.d("SENSOR_ACCURACY", "Sensor: " + sensor.getName() + " Accuracy: " + accuracy);
     }
 }
