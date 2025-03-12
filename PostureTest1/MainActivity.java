@@ -58,6 +58,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelGraph.addSeries(accelXSeries);
         accelGraph.addSeries(accelYSeries);
         accelGraph.addSeries(accelZSeries);
+
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sensorManager != null) {
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        }
     }
 
     @Override
@@ -86,4 +92,3 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) { }
-}
