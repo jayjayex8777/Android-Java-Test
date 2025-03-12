@@ -18,13 +18,13 @@
         android:layout_height="wrap_content"
         android:text="Yaw: 0.00, Pitch: 0.00, Roll: 0.00"
         android:textSize="16sp"
-        android:layout_marginTop="20dp"/>
+        android:layout_marginTop="10dp"/>
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/gyroGraph"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="10dp"/>
 
     <TextView
         android:id="@+id/accelTextView"
@@ -32,12 +32,11 @@
         android:layout_height="wrap_content"
         android:text="Accel X: 0.00, Y: 0.00, Z: 0.00"
         android:textSize="16sp"
-        android:layout_marginTop="20dp"/>
+        android:layout_marginTop="10dp"/>
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/accelGraph"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginTop="16dp"/>
-
+        android:layout_marginTop="10dp"/>
 </LinearLayout>
