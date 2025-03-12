@@ -1,94 +1,109 @@
 package com.example.posturetest1;
 
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.TextView;
-import androidx.activity.EdgeToEdge;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import androidx.appcompat.app.AppCompatActivity;
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private SensorManager sensorManager;
     private Sensor accelerometer, gyroscope;
-    private SmartphoneView smartphoneView;
-    private TextView gyroTextView, accelTextView;
-    private GraphView gyroGraph, accelGraph;
-    private LineGraphSeries<DataPoint> gyroYawSeries, gyroPitchSeries, gyroRollSeries;
-    private LineGraphSeries<DataPoint> accelXSeries, accelYSeries, accelZSeries;
-    private int graphXIndex = 0;
+    private float[] rotationMatrix = new float[9];
+    private float[] orientationValues = new float[3];
 
-    private float currentYaw = 0f, currentPitch = 0f, currentRoll = 0f;
+    private float pitch = 0, roll = 0;
+
+    private SurfaceView surfaceView;
+    private SurfaceHolder holder;
+    private Paint paint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        smartphoneView = findViewById(R.id.smartphoneView);
-        gyroTextView = findViewById(R.id.gyroTextView);
-        accelTextView = findViewById(R.id.accelTextView);
-        gyroGraph = findViewById(R.id.gyroGraph);
-        accelGraph = findViewById(R.id.accelGraph);
-
-        gyroYawSeries = new LineGraphSeries<>();
-        gyroPitchSeries = new LineGraphSeries<>();
-        gyroRollSeries = new LineGraphSeries<>();
-        gyroYawSeries.setColor(Color.RED);
-        gyroPitchSeries.setColor(Color.GREEN);
-        gyroRollSeries.setColor(Color.BLUE);
-        gyroGraph.addSeries(gyroYawSeries);
-        gyroGraph.addSeries(gyroPitchSeries);
-        gyroGraph.addSeries(gyroRollSeries);
-
-        accelXSeries = new LineGraphSeries<>();
-        accelYSeries = new LineGraphSeries<>();
-        accelZSeries = new LineGraphSeries<>();
-        accelXSeries.setColor(Color.RED);
-        accelYSeries.setColor(Color.GREEN);
-        accelZSeries.setColor(Color.BLUE);
-        accelGraph.addSeries(accelXSeries);
-        accelGraph.addSeries(accelYSeries);
-        accelGraph.addSeries(accelZSeries);
+        surfaceView = findViewById(R.id.surfaceView);
+        holder = surfaceView.getHolder();
+        paint = new Paint();
+        paint.setColor(Color.BLUE);
+        paint.setStyle(Paint.Style.FILL);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sensorManager != null) {
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
+        if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
         }
+        if (gyroscope != null) {
+            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
+        }
+
+        holder.addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                draw();
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                draw();
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+            }
+        });
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {  
-        graphXIndex++; 
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float[] gravity = event.values.clone();
+            SensorManager.getRotationMatrix(rotationMatrix, null, gravity, new float[]{0, 0, 1});
+            SensorManager.getOrientation(rotationMatrix, orientationValues);
+            pitch = (float) Math.toDegrees(orientationValues[1]);  // X 축 회전
+            roll = (float) Math.toDegrees(orientationValues[2]);   // Y 축 회전
+        }
+        draw();
+    }
 
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            float yaw = event.values[0];
-            float pitch = event.values[1];
-            float roll = event.values[2];
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
 
-            currentYaw += yaw;
-            currentPitch += pitch;
-            currentRoll += roll;
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        sensorManager.unregisterListener(this);
+    }
 
-            runOnUiThread(() -> {
-                smartphoneView.updateRotation(currentYaw, currentPitch, currentRoll);
-                gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
-            });
+    private void draw() {
+        Canvas canvas = holder.lockCanvas();
+        if (canvas != null) {
+            canvas.drawColor(Color.WHITE);
+            canvas.save();
+
+            float centerX = surfaceView.getWidth() / 2.0f;
+            float centerY = surfaceView.getHeight() / 2.0f;
+            float rectWidth = 300;
+            float rectHeight = 600;
+
+            canvas.translate(centerX, centerY);
+            canvas.rotate(roll);
+
+            canvas.drawRect(-rectWidth / 2, -rectHeight / 2, rectWidth / 2, rectHeight / 2, paint);
+            canvas.restore();
+
+            holder.unlockCanvasAndPost(canvas);
         }
     }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
 }
