@@ -37,7 +37,6 @@ public class SmartphoneView extends View {
         canvas.save();
         canvas.translate(width / 2, height / 2);
 
-        // Camera를 사용하여 X, Y, Z 축 회전 적용
         camera.save();
         camera.rotateX(rotationPitch);
         camera.rotateY(rotationYaw);
@@ -49,7 +48,6 @@ public class SmartphoneView extends View {
         matrix.postTranslate(width / 2, height / 2);
         canvas.concat(matrix);
 
-        // 스마트폰 직사각형 그리기
         float rectWidth = 200;
         float rectHeight = 400;
         canvas.drawRect(-rectWidth / 2, -rectHeight / 2, rectWidth / 2, rectHeight / 2, paint);
@@ -61,6 +59,6 @@ public class SmartphoneView extends View {
         this.rotationYaw = yaw * 5;
         this.rotationPitch = pitch * 5;
         this.rotationRoll = roll * 5;
-        invalidate();
+        postInvalidate();
     }
 }
