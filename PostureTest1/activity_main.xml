@@ -1,18 +1,24 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.posturetest1">
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
 
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="Posture Test"
-        android:theme="@style/Theme.PostureTest">
-        
-        <activity android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
+    <!-- 중앙에 스마트폰 모양의 직사각형을 표시할 SurfaceView -->
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-</manifest>
+    <!-- 스마트폰의 자세를 표시하는 텍스트뷰 -->
+    <TextView
+        android:id="@+id/gyroTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+</RelativeLayout>
