@@ -40,4 +40,11 @@
         android:layout_height="200dp"
         android:layout_marginTop="16dp"/>
 
+    <com.example.posturetest1.SmartphoneView
+    android:id="@+id/smartphoneView"
+    android:layout_width="250dp"
+    android:layout_height="450dp"
+    android:layout_gravity="center"
+    android:background="#EEEEEE"/>
+
 </LinearLayout>
