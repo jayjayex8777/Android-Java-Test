@@ -33,7 +33,7 @@ public class SmartphoneView extends View {
         int width = getWidth();
         int height = getHeight();
 
-        // 가운데 정렬을 위해 캔버스 이동
+        // 캔버스 중심으로 이동
         canvas.save();
         canvas.translate(width / 2, height / 2);
 
@@ -49,7 +49,7 @@ public class SmartphoneView extends View {
         matrix.postTranslate(width / 2, height / 2);
         canvas.concat(matrix);
 
-        // 직사각형 스마트폰 모양 그리기
+        // 스마트폰 직사각형 그리기
         float rectWidth = 200;
         float rectHeight = 400;
         canvas.drawRect(-rectWidth / 2, -rectHeight / 2, rectWidth / 2, rectHeight / 2, paint);
@@ -57,10 +57,9 @@ public class SmartphoneView extends View {
         canvas.restore();
     }
 
-    // 스마트폰 기울기 값을 받아와서 업데이트
     public void updateRotation(float pitch, float roll) {
-        this.rotationX = pitch * 5; // 감도 조절
+        this.rotationX = pitch * 5;
         this.rotationY = roll * 5;
-        invalidate(); // 화면 다시 그리기
+        invalidate();
     }
 }
