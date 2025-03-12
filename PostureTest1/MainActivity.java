@@ -59,18 +59,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelGraph.addSeries(accelYSeries);
         accelGraph.addSeries(accelZSeries);
 
+        // 그래프 뷰포트 설정 (자동 스크롤 활성화)
+        gyroGraph.getViewport().setXAxisBoundsManual(true);
+        gyroGraph.getViewport().setMinX(0);
+        gyroGraph.getViewport().setMaxX(100);
+        gyroGraph.getViewport().setScrollable(true);
+
+        accelGraph.getViewport().setXAxisBoundsManual(true);
+        accelGraph.getViewport().setMinX(0);
+        accelGraph.getViewport().setMaxX(100);
+        accelGraph.getViewport().setScrollable(true);
+
         // 센서 매니저 설정
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
-            if (gyroscope == null) {
-                Log.e("SENSOR_ERROR", "Gyroscope not available!");
-            }
-            if (accelerometer == null) {
-                Log.e("SENSOR_ERROR", "Accelerometer not available!");
-            }
         }
     }
 
@@ -80,27 +84,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (sensorManager != null) {
             if (gyroscope != null) {
                 sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
-                Log.d("SENSOR_REGISTER", "Gyroscope registered successfully");
             }
             if (accelerometer != null) {
                 sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-                Log.d("SENSOR_REGISTER", "Accelerometer registered successfully");
             }
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(this);
         }
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor == null) return;
-
         runOnUiThread(() -> {
             graphXIndex++;
 
@@ -109,12 +101,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 float pitch = event.values[1];
                 float roll = event.values[2];
 
-                Log.d("GYRO_DATA", "Yaw: " + yaw + ", Pitch: " + pitch + ", Roll: " + roll);
-
                 smartphoneView.updateRotation(pitch, roll);
                 gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
 
-                // 그래프 업데이트
+                // 그래프 업데이트 (자동 스크롤 활성화)
                 gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
                 gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
                 gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
@@ -125,11 +115,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 float accelY = event.values[1];
                 float accelZ = event.values[2];
 
-                Log.d("ACCEL_DATA", "X: " + accelX + ", Y: " + accelY + ", Z: " + accelZ);
-
                 accelTextView.setText(String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f", accelX, accelY, accelZ));
 
-                // 그래프 업데이트
+                // 그래프 업데이트 (자동 스크롤 활성화)
                 accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
                 accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
                 accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
