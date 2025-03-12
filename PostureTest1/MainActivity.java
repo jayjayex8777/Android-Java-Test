@@ -40,75 +40,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroGraph = findViewById(R.id.gyroGraph);
         accelGraph = findViewById(R.id.accelGraph);
 
-        // 그래프 초기화 및 뷰포트 설정 (자동 스크롤 활성화)
+        // 그래프 초기화 (센서별 색상 적용)
         gyroYawSeries = new LineGraphSeries<>();
         gyroPitchSeries = new LineGraphSeries<>();
         gyroRollSeries = new LineGraphSeries<>();
+        gyroYawSeries.setColor(Color.RED);
+        gyroPitchSeries.setColor(Color.GREEN);
+        gyroRollSeries.setColor(Color.BLUE);
         gyroGraph.addSeries(gyroYawSeries);
         gyroGraph.addSeries(gyroPitchSeries);
         gyroGraph.addSeries(gyroRollSeries);
-        gyroGraph.getViewport().setXAxisBoundsManual(true);
-        gyroGraph.getViewport().setMinX(0);
-        gyroGraph.getViewport().setMaxX(100);
-        gyroGraph.getViewport().setScrollable(true);
 
         accelXSeries = new LineGraphSeries<>();
         accelYSeries = new LineGraphSeries<>();
         accelZSeries = new LineGraphSeries<>();
+        accelXSeries.setColor(Color.RED);
+        accelYSeries.setColor(Color.GREEN);
+        accelZSeries.setColor(Color.BLUE);
         accelGraph.addSeries(accelXSeries);
         accelGraph.addSeries(accelYSeries);
         accelGraph.addSeries(accelZSeries);
-        accelGraph.getViewport().setXAxisBoundsManual(true);
-        accelGraph.getViewport().setMinX(0);
-        accelGraph.getViewport().setMaxX(100);
-        accelGraph.getViewport().setScrollable(true);
-
-        // 센서 매니저 설정
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sensorManager != null) {
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
-            if (gyroscope == null) {
-                Log.e("SENSOR_ERROR", "Gyroscope not available!");
-            } else {
-                Log.d("SENSOR_REGISTER", "Gyroscope available!");
-            }
-
-            if (accelerometer == null) {
-                Log.e("SENSOR_ERROR", "Accelerometer not available!");
-            } else {
-                Log.d("SENSOR_REGISTER", "Accelerometer available!");
-            }
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (sensorManager != null) {
-            if (gyroscope != null) {
-                sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
-                Log.d("SENSOR_REGISTER", "Gyroscope registered successfully");
-            }
-            if (accelerometer != null) {
-                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-                Log.d("SENSOR_REGISTER", "Accelerometer registered successfully");
-            }
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(this);
-        }
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {  
-        graphXIndex++; // runOnUiThread() 밖에서 증가
+        graphXIndex++; 
 
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             float yaw = event.values[0];
@@ -123,7 +79,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             runOnUiThread(() -> {
                 smartphoneView.updateRotation(currentYaw, currentPitch, currentRoll);
-
                 gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
 
                 gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
@@ -148,7 +103,4 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             });
         }
     }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
 }
