@@ -1,8 +1,10 @@
 package com.example.posturetest1;
 
 import android.content.Context;
+import android.graphics.Camera;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
@@ -10,6 +12,8 @@ import android.view.View;
 public class SmartphoneView extends View {
 
     private Paint paint;
+    private Camera camera;
+    private Matrix matrix;
     private float rotationX = 0f;
     private float rotationY = 0f;
 
@@ -18,6 +22,8 @@ public class SmartphoneView extends View {
         paint = new Paint();
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
+        camera = new Camera();
+        matrix = new Matrix();
     }
 
     @Override
@@ -30,10 +36,20 @@ public class SmartphoneView extends View {
         // 가운데 정렬을 위해 캔버스 이동
         canvas.save();
         canvas.translate(width / 2, height / 2);
-        canvas.rotate(rotationX, 1, 0, 0);
-        canvas.rotate(rotationY, 0, 1, 0);
 
-        // 스마트폰 직사각형 그리기
+        // Camera를 사용한 X, Y 축 3D 회전 적용
+        camera.save();
+        camera.rotateX(rotationX);
+        camera.rotateY(rotationY);
+        camera.getMatrix(matrix);
+        camera.restore();
+
+        // 원래 위치로 변환 적용
+        matrix.preTranslate(-width / 2, -height / 2);
+        matrix.postTranslate(width / 2, height / 2);
+        canvas.concat(matrix);
+
+        // 직사각형 스마트폰 모양 그리기
         float rectWidth = 200;
         float rectHeight = 400;
         canvas.drawRect(-rectWidth / 2, -rectHeight / 2, rectWidth / 2, rectHeight / 2, paint);
@@ -41,8 +57,9 @@ public class SmartphoneView extends View {
         canvas.restore();
     }
 
+    // 스마트폰 기울기 값을 받아와서 업데이트
     public void updateRotation(float pitch, float roll) {
-        this.rotationX = pitch * 5; // 감도 조정
+        this.rotationX = pitch * 5; // 감도 조절
         this.rotationY = roll * 5;
         invalidate(); // 화면 다시 그리기
     }
