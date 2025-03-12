@@ -34,23 +34,23 @@ public class Cube {
 
     static final int COORDS_PER_VERTEX = 3;
     private static final float[] cubeCoords = {
-            -0.5f,  0.5f,  0.5f,  // 앞면 좌상
-            -0.5f, -0.5f,  0.5f,  // 앞면 좌하
-             0.5f, -0.5f,  0.5f,  // 앞면 우하
-             0.5f,  0.5f,  0.5f,  // 앞면 우상
-            -0.5f,  0.5f, -0.5f,  // 뒷면 좌상
-            -0.5f, -0.5f, -0.5f,  // 뒷면 좌하
-             0.5f, -0.5f, -0.5f,  // 뒷면 우하
-             0.5f,  0.5f, -0.5f   // 뒷면 우상
+            -0.5f,  0.5f,  0.5f,  
+            -0.5f, -0.5f,  0.5f,  
+             0.5f, -0.5f,  0.5f,  
+             0.5f,  0.5f,  0.5f,  
+            -0.5f,  0.5f, -0.5f,  
+            -0.5f, -0.5f, -0.5f,  
+             0.5f, -0.5f, -0.5f,  
+             0.5f,  0.5f, -0.5f   
     };
 
     private static final short[] drawOrder = {
-            0, 1, 2,  0, 2, 3,  // 앞면
-            4, 5, 6,  4, 6, 7,  // 뒷면
-            0, 1, 5,  0, 5, 4,  // 왼쪽면
-            2, 3, 7,  2, 7, 6,  // 오른쪽면
-            0, 3, 7,  0, 7, 4,  // 윗면
-            1, 2, 6,  1, 6, 5   // 아랫면
+            0, 1, 2,  0, 2, 3,  
+            4, 5, 6,  4, 6, 7,  
+            0, 1, 5,  0, 5, 4,  
+            2, 3, 7,  2, 7, 6,  
+            0, 3, 7,  0, 7, 4,  
+            1, 2, 6,  1, 6, 5   
     };
 
     private final int vertexStride = COORDS_PER_VERTEX * 4;
@@ -99,12 +99,5 @@ public class Cube {
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
 
         GLES20.glDisableVertexAttribArray(positionHandle);
-    }
-
-    private int loadShader(int type, String shaderCode) {
-        int shader = GLES20.glCreateShader(type);
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-        return shader;
     }
 }
