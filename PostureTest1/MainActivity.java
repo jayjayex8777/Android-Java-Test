@@ -40,26 +40,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroGraph = findViewById(R.id.gyroGraph);
         accelGraph = findViewById(R.id.accelGraph);
 
-        // 그래프 초기화
+        // 그래프 초기화 및 뷰포트 설정 (자동 스크롤 활성화)
         gyroYawSeries = new LineGraphSeries<>();
         gyroPitchSeries = new LineGraphSeries<>();
         gyroRollSeries = new LineGraphSeries<>();
-        gyroYawSeries.setColor(Color.RED);
-        gyroPitchSeries.setColor(Color.GREEN);
-        gyroRollSeries.setColor(Color.BLUE);
         gyroGraph.addSeries(gyroYawSeries);
         gyroGraph.addSeries(gyroPitchSeries);
         gyroGraph.addSeries(gyroRollSeries);
+        gyroGraph.getViewport().setXAxisBoundsManual(true);
+        gyroGraph.getViewport().setMinX(0);
+        gyroGraph.getViewport().setMaxX(100);
+        gyroGraph.getViewport().setScrollable(true);
 
         accelXSeries = new LineGraphSeries<>();
         accelYSeries = new LineGraphSeries<>();
         accelZSeries = new LineGraphSeries<>();
-        accelXSeries.setColor(Color.RED);
-        accelYSeries.setColor(Color.GREEN);
-        accelZSeries.setColor(Color.BLUE);
         accelGraph.addSeries(accelXSeries);
         accelGraph.addSeries(accelYSeries);
         accelGraph.addSeries(accelZSeries);
+        accelGraph.getViewport().setXAxisBoundsManual(true);
+        accelGraph.getViewport().setMinX(0);
+        accelGraph.getViewport().setMaxX(100);
+        accelGraph.getViewport().setScrollable(true);
 
         // 센서 매니저 설정
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -70,28 +72,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (sensorManager != null) {
-            if (gyroscope != null) {
-                sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
-            }
-            if (accelerometer != null) {
-                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-            }
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(this);
-        }
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {  // ✅ 'public'으로 수정하여 정상 동작
+    public void onSensorChanged(SensorEvent event) {
         runOnUiThread(() -> {
             graphXIndex++;
 
@@ -100,31 +81,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 float pitch = event.values[1];
                 float roll = event.values[2];
 
-                // 누적 값 적용 (기기의 누적된 각도 유지)
                 currentYaw += yaw;
                 currentPitch += pitch;
                 currentRoll += roll;
 
                 smartphoneView.updateRotation(currentYaw, currentPitch, currentRoll);
-                gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
 
-                // 그래프 업데이트
                 gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
                 gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
                 gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
-            }
-
-            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                float accelX = event.values[0];
-                float accelY = event.values[1];
-                float accelZ = event.values[2];
-
-                accelTextView.setText(String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f", accelX, accelY, accelZ));
-
-                // 그래프 업데이트
-                accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
-                accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
-                accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
             }
         });
     }
