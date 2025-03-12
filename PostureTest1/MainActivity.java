@@ -70,7 +70,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    protected void onSensorChanged(SensorEvent event) {
+    protected void onResume() {
+        super.onResume();
+        if (sensorManager != null) {
+            if (gyroscope != null) {
+                sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
+            }
+            if (accelerometer != null) {
+                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {  // ✅ 'public'으로 수정하여 정상 동작
         runOnUiThread(() -> {
             graphXIndex++;
 
