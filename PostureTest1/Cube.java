@@ -100,4 +100,18 @@ public class Cube {
 
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
+    private int loadShader(int type, String shaderCode) {
+    int shader = GLES20.glCreateShader(type);
+    GLES20.glShaderSource(shader, shaderCode);
+    GLES20.glCompileShader(shader);
+    
+    int[] compiled = new int[1];
+    GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+    if (compiled[0] == 0) {
+        String errorMsg = GLES20.glGetShaderInfoLog(shader);
+        GLES20.glDeleteShader(shader);
+        throw new RuntimeException("Shader compilation failed: " + errorMsg);
+    }
+    return shader;
+   }
 }
