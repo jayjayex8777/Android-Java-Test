@@ -3,22 +3,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="top"
-    android:padding="8dp">
+    android:gravity="center"
+    android:padding="16dp">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"/>
+    <com.example.posturetest1.SmartphoneView
+        android:id="@+id/smartphoneView"
+        android:layout_width="250dp"
+        android:layout_height="450dp"
+        android:background="#EEEEEE"/>
 
     <TextView
         android:id="@+id/gyroTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00"
-        android:textSize="14sp"
-        android:paddingVertical="5dp"/>
+        android:text="Yaw: 0.00, Pitch: 0.00, Roll: 0.00"
+        android:textSize="16sp"
+        android:layout_marginTop="20dp"/>
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/gyroGraph"
@@ -30,21 +30,14 @@
         android:id="@+id/accelTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Accel X: +00.00, Y: +00.00, Z: +00.00"
-        android:textSize="14sp"
-        android:paddingVertical="5dp"/>
+        android:text="Accel X: 0.00, Y: 0.00, Z: 0.00"
+        android:textSize="16sp"
+        android:layout_marginTop="20dp"/>
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/accelGraph"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_marginTop="16dp"/>
-
-    <com.example.posturetest1.SmartphoneView
-    android:id="@+id/smartphoneView"
-    android:layout_width="250dp"
-    android:layout_height="450dp"
-    android:layout_gravity="center"
-    android:background="#EEEEEE"/>
 
 </LinearLayout>
