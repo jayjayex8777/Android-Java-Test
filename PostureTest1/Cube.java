@@ -10,18 +10,19 @@ import java.nio.ShortBuffer;
 
 public class Cube {
 
+    // ✅ 수정된 **정확한 OpenGL ES 2.0용 셰이더 코드**
     private final String vertexShaderCode =
-            "uniform mat4 uMVPMatrix;" +
-            "attribute vec4 vPosition;" +
-            "void main() {" +
-            "  gl_Position = uMVPMatrix * vPosition;" +
+            "uniform mat4 uMVPMatrix;\n" +
+            "attribute vec4 vPosition;\n" +
+            "void main() {\n" +
+            "  gl_Position = uMVPMatrix * vPosition;\n" +
             "}";
 
     private final String fragmentShaderCode =
-            "precision mediump float;" +
-            "uniform vec4 vColor;" +
-            "void main() {" +
-            "  gl_FragColor = vColor;" +
+            "precision mediump float;\n" +
+            "uniform vec4 vColor;\n" +
+            "void main() {\n" +
+            "  gl_FragColor = vColor;\n" +
             "}";
 
     private final FloatBuffer vertexBuffer;
@@ -54,7 +55,6 @@ public class Cube {
     };
 
     private final int vertexStride = COORDS_PER_VERTEX * 4;
-
     private final float[] color = {0.0f, 0.0f, 1.0f, 1.0f}; // 파란색
 
     public Cube() {
@@ -100,18 +100,19 @@ public class Cube {
 
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
+
     private int loadShader(int type, String shaderCode) {
-    int shader = GLES20.glCreateShader(type);
-    GLES20.glShaderSource(shader, shaderCode);
-    GLES20.glCompileShader(shader);
-    
-    int[] compiled = new int[1];
-    GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
-    if (compiled[0] == 0) {
-        String errorMsg = GLES20.glGetShaderInfoLog(shader);
-        GLES20.glDeleteShader(shader);
-        throw new RuntimeException("Shader compilation failed: " + errorMsg);
+        int shader = GLES20.glCreateShader(type);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+        
+        int[] compiled = new int[1];
+        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+        if (compiled[0] == 0) {
+            String errorMsg = GLES20.glGetShaderInfoLog(shader);
+            GLES20.glDeleteShader(shader);
+            throw new RuntimeException("Shader compilation failed: " + errorMsg);
+        }
+        return shader;
     }
-    return shader;
-   }
 }
