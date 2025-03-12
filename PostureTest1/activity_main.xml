@@ -2,23 +2,23 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="@android:color/black">
 
-    <!-- 중앙에 스마트폰 모양의 직사각형을 표시할 SurfaceView -->
-    <SurfaceView
-        android:id="@+id/surfaceView"
+    <!-- OpenGL을 위한 GLSurfaceView -->
+    <android.opengl.GLSurfaceView
+        android:id="@+id/glSurfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- 스마트폰의 자세를 표시하는 텍스트뷰 -->
+    <!-- 센서값을 출력할 TextView -->
     <TextView
-        android:id="@+id/gyroTextView"
+        android:id="@+id/sensorTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
-        android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00"
+        android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00\nAccel X: +00.00, Y: +00.00, Z: +00.00"
+        android:textColor="@android:color/white"
         android:textSize="16sp"
         android:textStyle="bold"/>
-
 </RelativeLayout>
