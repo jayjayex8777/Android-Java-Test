@@ -1,4 +1,4 @@
-package com.example.objectselect2;
+package com.example.posturetest1;
 
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
-
     private SensorManager sensorManager;
     private Sensor accelerometer, gyroscope;
     private TextView gyroTextView, accelTextView;
@@ -63,47 +62,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         }
-
-        // 그래프 초기화 (자이로 데이터)
-        gyroYawSeries = new LineGraphSeries<>();
-        gyroPitchSeries = new LineGraphSeries<>();
-        gyroRollSeries = new LineGraphSeries<>();
-
-        gyroYawSeries.setColor(Color.RED);    // Yaw - 빨간색
-        gyroPitchSeries.setColor(Color.GREEN); // Pitch - 초록색
-        gyroRollSeries.setColor(Color.BLUE);   // Roll - 파란색
-
-        gyroGraph.addSeries(gyroYawSeries);
-        gyroGraph.addSeries(gyroPitchSeries);
-        gyroGraph.addSeries(gyroRollSeries);
-
-        // 그래프 초기화 (가속도 데이터)
-        accelXSeries = new LineGraphSeries<>();
-        accelYSeries = new LineGraphSeries<>();
-        accelZSeries = new LineGraphSeries<>();
-
-        accelXSeries.setColor(Color.RED);    // Accel X - 빨간색
-        accelYSeries.setColor(Color.GREEN); // Accel Y - 초록색
-        accelZSeries.setColor(Color.BLUE);   // Accel Z - 파란색
-
-        accelGraph.addSeries(accelXSeries);
-        accelGraph.addSeries(accelYSeries);
-        accelGraph.addSeries(accelZSeries);
-
-        // Gyro 그래프 설정
-        gyroGraph.getViewport().setYAxisBoundsManual(true);
-        gyroGraph.getViewport().setMinY(-7);
-        gyroGraph.getViewport().setMaxY(7);
-        gyroGraph.getViewport().setXAxisBoundsManual(true);
-        gyroGraph.getViewport().setMinX(0);
-        gyroGraph.getViewport().setMaxX(100);
-        gyroGraph.getViewport().setScrollable(true);
-
-        // Accel 그래프 설정
-        accelGraph.getViewport().setXAxisBoundsManual(true);
-        accelGraph.getViewport().setMinX(0);
-        accelGraph.getViewport().setMaxX(100);
-        accelGraph.getViewport().setScrollable(true);
     }
 
     @Override
