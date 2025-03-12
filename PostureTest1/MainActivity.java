@@ -56,39 +56,4 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelYSeries.setColor(Color.GREEN);
         accelZSeries.setColor(Color.BLUE);
         accelGraph.addSeries(accelXSeries);
-        accelGraph.addSeries(accelYSeries);
-        accelGraph.addSeries(accelZSeries);
-
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sensorManager != null) {
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        }
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {  
-        graphXIndex++; 
-
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            float yaw = event.values[0];
-            float pitch = event.values[1];
-            float roll = event.values[2];
-
-            currentYaw += yaw;
-            currentPitch += pitch;
-            currentRoll += roll;
-
-            runOnUiThread(() -> {
-                smartphoneView.updateRotation(currentYaw, currentPitch, currentRoll);
-                gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
-
-                gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
-                gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
-                gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
-            });
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
+        accelGraph.addSeries(accel
