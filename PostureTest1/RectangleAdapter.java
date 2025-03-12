@@ -1,4 +1,4 @@
-package com.example.objectselect2;
+package com.example.posturetest1;
 
 import android.view.LayoutInflater;
 import android.view.View;
