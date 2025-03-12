@@ -17,8 +17,6 @@ public class SmartphoneView extends View {
     private float rotationYaw = 0f;
     private float rotationPitch = 0f;
     private float rotationRoll = 0f;
-    private float translateX = 0f;
-    private float translateY = 0f;
 
     public SmartphoneView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -36,9 +34,8 @@ public class SmartphoneView extends View {
         int width = getWidth();
         int height = getHeight();
 
-        // 캔버스 이동 (기울기에 따라 위치 변화 적용)
         canvas.save();
-        canvas.translate(width / 2 + translateX, height / 2 + translateY);
+        canvas.translate(width / 2, height / 2);
 
         // Camera를 사용하여 X, Y, Z 축 회전 적용
         camera.save();
@@ -48,7 +45,6 @@ public class SmartphoneView extends View {
         camera.getMatrix(matrix);
         camera.restore();
 
-        // 변환 적용
         matrix.preTranslate(-width / 2, -height / 2);
         matrix.postTranslate(width / 2, height / 2);
         canvas.concat(matrix);
@@ -62,14 +58,9 @@ public class SmartphoneView extends View {
     }
 
     public void updateRotation(float yaw, float pitch, float roll) {
-        this.rotationYaw = yaw * 5;   // 감도 조정 (기울기 반영)
+        this.rotationYaw = yaw * 5;
         this.rotationPitch = pitch * 5;
         this.rotationRoll = roll * 5;
-
-        // 기울기에 따라 X, Y 좌표를 조정 (과도한 값 방지)
-        this.translateX = roll * 3;
-        this.translateY = pitch * 3;
-
         invalidate();
     }
 }
