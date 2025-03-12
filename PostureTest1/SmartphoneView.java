@@ -58,8 +58,8 @@ public class SmartphoneView extends View {
     }
 
     public void updateRotation(float pitch, float roll) {
-        this.rotationX = pitch * 5;
-        this.rotationY = roll * 5;
+        this.rotationX = pitch * 10; // 감도 조절
+        this.rotationY = roll * 10;
         invalidate();
     }
 }
