@@ -62,13 +62,13 @@ public class SmartphoneView extends View {
     }
 
     public void updateRotation(float yaw, float pitch, float roll) {
-        this.rotationYaw = yaw * 10;   // 감도 조정
-        this.rotationPitch = pitch * 10;
-        this.rotationRoll = roll * 10;
+        this.rotationYaw = yaw * 5;   // 감도 조정 (기울기 반영)
+        this.rotationPitch = pitch * 5;
+        this.rotationRoll = roll * 5;
 
-        // 위치 이동 (기울기에 따라 화면 위치 조정)
-        this.translateX = roll * 5;
-        this.translateY = pitch * 5;
+        // 기울기에 따라 X, Y 좌표를 조정 (과도한 값 방지)
+        this.translateX = roll * 3;
+        this.translateY = pitch * 3;
 
         invalidate();
     }
