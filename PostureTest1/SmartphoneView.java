@@ -37,14 +37,14 @@ public class SmartphoneView extends View {
         canvas.save();
         canvas.translate(width / 2, height / 2);
 
-        // Camera를 사용한 X, Y 축 3D 회전 적용
+        // Camera를 사용하여 X, Y 축 회전 적용
         camera.save();
-        camera.rotateX(rotationX);
-        camera.rotateY(rotationY);
+        camera.rotateX(-rotationX); // 가속도 센서 값 반영
+        camera.rotateY(-rotationY); // 기울기 반영
         camera.getMatrix(matrix);
         camera.restore();
 
-        // 원래 위치로 변환 적용
+        // 변환 적용
         matrix.preTranslate(-width / 2, -height / 2);
         matrix.postTranslate(width / 2, height / 2);
         canvas.concat(matrix);
@@ -58,7 +58,7 @@ public class SmartphoneView extends View {
     }
 
     public void updateRotation(float pitch, float roll) {
-        this.rotationX = pitch * 10; // 감도 조절
+        this.rotationX = pitch * 10; // 감도 조정
         this.rotationY = roll * 10;
         invalidate();
     }
