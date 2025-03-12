@@ -68,30 +68,85 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+            if (gyroscope == null) {
+                Log.e("SENSOR_ERROR", "Gyroscope not available!");
+            } else {
+                Log.d("SENSOR_REGISTER", "Gyroscope available!");
+            }
+
+            if (accelerometer == null) {
+                Log.e("SENSOR_ERROR", "Accelerometer not available!");
+            } else {
+                Log.d("SENSOR_REGISTER", "Accelerometer available!");
+            }
         }
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
-        runOnUiThread(() -> {
-            graphXIndex++;
+    protected void onResume() {
+        super.onResume();
+        if (sensorManager != null) {
+            if (gyroscope != null) {
+                sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
+                Log.d("SENSOR_REGISTER", "Gyroscope registered successfully");
+            }
+            if (accelerometer != null) {
+                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+                Log.d("SENSOR_REGISTER", "Accelerometer registered successfully");
+            }
+        }
+    }
 
-            if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-                float yaw = event.values[0];
-                float pitch = event.values[1];
-                float roll = event.values[2];
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+    }
 
-                currentYaw += yaw;
-                currentPitch += pitch;
-                currentRoll += roll;
+    @Override
+    public void onSensorChanged(SensorEvent event) {  
+        graphXIndex++; // runOnUiThread() 밖에서 증가
 
+        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            float yaw = event.values[0];
+            float pitch = event.values[1];
+            float roll = event.values[2];
+
+            Log.d("GYRO_DATA", "Yaw: " + yaw + ", Pitch: " + pitch + ", Roll: " + roll);
+
+            currentYaw += yaw;
+            currentPitch += pitch;
+            currentRoll += roll;
+
+            runOnUiThread(() -> {
                 smartphoneView.updateRotation(currentYaw, currentPitch, currentRoll);
+
+                gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
 
                 gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
                 gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
                 gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
-            }
-        });
+            });
+        }
+
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float accelX = event.values[0];
+            float accelY = event.values[1];
+            float accelZ = event.values[2];
+
+            Log.d("ACCEL_DATA", "X: " + accelX + ", Y: " + accelY + ", Z: " + accelZ);
+
+            runOnUiThread(() -> {
+                accelTextView.setText(String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f", accelX, accelY, accelZ));
+
+                accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
+                accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
+                accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
+            });
+        }
     }
 
     @Override
