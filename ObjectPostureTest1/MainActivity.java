@@ -2,8 +2,8 @@ package com.example.objectposturetest1;
 
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
     private GLSurfaceView glSurfaceView;
