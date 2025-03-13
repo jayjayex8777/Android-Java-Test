@@ -13,22 +13,25 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class CubeRenderer implements GLSurfaceView.Renderer {
-    private FloatBuffer vertexBuffer;
+    private FloatBuffer vertexBuffer, colorBuffer;
     private ShortBuffer drawListBuffer;
 
     private final String vertexShaderCode =
-            "uniform mat4 uMVPMatrix;" +  // MVP 행렬 추가
-            "attribute vec4 vPosition;" +
-            "void main() {" +
-            "  gl_Position = uMVPMatrix * vPosition;" + // 🚀 변환 행렬 적용
-            "}";
+        "attribute vec4 vPosition;" +
+        "attribute vec4 vColor;" + 
+        "varying vec4 fColor;" +   
+        "uniform mat4 uMVPMatrix;" +
+        "void main() {" +
+        "  gl_Position = uMVPMatrix * vPosition;" +
+        "  fColor = vColor;" + 
+        "}";
 
     private final String fragmentShaderCode =
-            "precision mediump float;" +
-            "uniform vec4 vColor;" +
-            "void main() {" +
-            "  gl_FragColor = vColor;" +
-            "}";
+        "precision mediump float;" +
+        "varying vec4 fColor;" + 
+        "void main() {" +
+        "  gl_FragColor = fColor;" + 
+        "}";
 
     private int program;
     private int positionHandle, colorHandle, mvpMatrixHandle;
@@ -41,23 +44,34 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
     private float rotationY = 0;
 
     private final float[] cubeCoords = {
-            -0.2f,  1.0f,  0.2f,  
-             0.2f,  1.0f,  0.2f,  
-            -0.2f,  0.0f,  0.2f,  
-             0.2f,  0.0f,  0.2f,  
-            -0.2f,  1.0f, -0.2f,  
-             0.2f,  1.0f, -0.2f,  
-            -0.2f,  0.0f, -0.2f,  
-             0.2f,  0.0f, -0.2f   
+        -0.2f,  1.0f,  0.2f,  
+         0.2f,  1.0f,  0.2f,  
+        -0.2f,  0.0f,  0.2f,  
+         0.2f,  0.0f,  0.2f,  
+        -0.2f,  1.0f, -0.2f,  
+         0.2f,  1.0f, -0.2f,  
+        -0.2f,  0.0f, -0.2f,  
+         0.2f,  0.0f, -0.2f   
     };
 
     private final short[] drawOrder = {
-            0, 1, 2, 2, 1, 3,
-            4, 5, 6, 6, 5, 7,
-            0, 4, 2, 2, 4, 6,
-            1, 5, 3, 3, 5, 7,
-            0, 1, 4, 4, 1, 5,
-            2, 3, 6, 6, 3, 7
+        0, 1, 2, 2, 1, 3,
+        4, 5, 6, 6, 5, 7,
+        0, 4, 2, 2, 4, 6,
+        1, 5, 3, 3, 5, 7,
+        0, 1, 4, 4, 1, 5,
+        2, 3, 6, 6, 3, 7
+    };
+
+    private final float[] cubeColors = {
+        1.0f, 0.0f, 0.0f, 1.0f,  
+        1.0f, 0.0f, 0.0f, 1.0f,  
+        0.0f, 1.0f, 0.0f, 1.0f,  
+        0.0f, 1.0f, 0.0f, 1.0f,  
+        0.0f, 0.0f, 1.0f, 1.0f,  
+        0.0f, 0.0f, 1.0f, 1.0f,  
+        1.0f, 1.0f, 0.0f, 1.0f,  
+        1.0f, 1.0f, 0.0f, 1.0f   
     };
 
     public CubeRenderer() {
@@ -72,6 +86,12 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         drawListBuffer = dlb.asShortBuffer();
         drawListBuffer.put(drawOrder);
         drawListBuffer.position(0);
+
+        ByteBuffer cbb = ByteBuffer.allocateDirect(cubeColors.length * 4);
+        cbb.order(ByteOrder.nativeOrder());
+        colorBuffer = cbb.asFloatBuffer();
+        colorBuffer.put(cubeColors);
+        colorBuffer.position(0);
     }
 
     @Override
@@ -96,11 +116,12 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glUseProgram(program);
 
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition");
-        colorHandle = GLES20.glGetUniformLocation(program, "vColor");
+        colorHandle = GLES20.glGetAttribLocation(program, "vColor");
 
         GLES20.glEnableVertexAttribArray(positionHandle);
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-        GLES20.glUniform4fv(colorHandle, 1, new float[]{0.6f, 0.8f, 1.0f, 1.0f}, 0);
+        GLES20.glEnableVertexAttribArray(colorHandle);
+        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 0, colorBuffer);
 
         Matrix.setIdentityM(modelMatrix, 0);
         Matrix.rotateM(modelMatrix, 0, rotationX, 1, 0, 0);
@@ -113,6 +134,7 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
 
         GLES20.glDisableVertexAttribArray(positionHandle);
+        GLES20.glDisableVertexAttribArray(colorHandle);
     }
 
     @Override
