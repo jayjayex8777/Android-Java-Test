@@ -7,12 +7,15 @@ import android.opengl.Matrix;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class CubeRenderer implements GLSurfaceView.Renderer {
     private FloatBuffer vertexBuffer;
+    private ShortBuffer drawListBuffer;
+    
     private final String vertexShaderCode =
             "attribute vec4 vPosition;" +
             "uniform mat4 uMVPMatrix;" +
@@ -65,6 +68,13 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         vertexBuffer = bb.asFloatBuffer();
         vertexBuffer.put(cubeCoords);
         vertexBuffer.position(0);
+
+        // ShortBuffer 생성 및 초기화
+        ByteBuffer dlb = ByteBuffer.allocateDirect(drawOrder.length * 2);
+        dlb.order(ByteOrder.nativeOrder());
+        drawListBuffer = dlb.asShortBuffer();
+        drawListBuffer.put(drawOrder);
+        drawListBuffer.position(0);
     }
 
     @Override
@@ -96,7 +106,7 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         Matrix.rotateM(modelMatrix, 0, rotationX, 0, 1, 0);
         Matrix.rotateM(modelMatrix, 0, rotationY, 1, 0, 0);
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, ByteBuffer.allocateDirect(drawOrder.length * 2).putShort(drawOrder).position(0));
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
 
