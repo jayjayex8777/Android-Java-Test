@@ -38,14 +38,14 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
     private float rotationY = 0;
 
     private final float[] cubeCoords = {
-            -0.2f,  1.0f,  0.2f,  // Top Left Front
-             0.2f,  1.0f,  0.2f,  // Top Right Front
-            -0.2f,  0.0f,  0.2f,  // Bottom Left Front
-             0.2f,  0.0f,  0.2f,  // Bottom Right Front
-            -0.2f,  1.0f, -0.2f,  // Top Left Back
-             0.2f,  1.0f, -0.2f,  // Top Right Back
-            -0.2f,  0.0f, -0.2f,  // Bottom Left Back
-             0.2f,  0.0f, -0.2f   // Bottom Right Back
+            -0.2f,  1.0f,  0.2f,  
+             0.2f,  1.0f,  0.2f,  
+            -0.2f,  0.0f,  0.2f,  
+             0.2f,  0.0f,  0.2f,  
+            -0.2f,  1.0f, -0.2f,  
+             0.2f,  1.0f, -0.2f,  
+            -0.2f,  0.0f, -0.2f,  
+             0.2f,  0.0f, -0.2f   
     };
 
     private final short[] drawOrder = {
@@ -57,7 +57,7 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
             2, 3, 6, 6, 3, 7
     };
 
-    private final float[] color = {0.6f, 0.8f, 1.0f, 1.0f}; // 연한 파랑색
+    private final float[] color = {0.6f, 0.8f, 1.0f, 1.0f}; 
 
     public CubeRenderer() {
         ByteBuffer bb = ByteBuffer.allocateDirect(cubeCoords.length * 4);
@@ -70,6 +70,8 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES20.glClearColor(1f, 1f, 1f, 1f);
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        
         program = GLES20.glCreateProgram();
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
         int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
@@ -98,8 +100,22 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
 
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        GLES20.glViewport(0, 0, width, height);
+        float ratio = (float) width / height;
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+    }
+
     public void setRotation(float dx, float dy) {
         rotationX += dx * 0.5f;
         rotationY += dy * 0.5f;
+    }
+
+    private int loadShader(int type, String shaderCode) {
+        int shader = GLES20.glCreateShader(type);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+        return shader;
     }
 }
