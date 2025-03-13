@@ -113,11 +113,41 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glEnableVertexAttribArray(positionHandle);
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
 
+        Matrix.setIdentityM(modelMatrix, 0);
+        Matrix.rotateM(modelMatrix, 0, rotationX, 1, 0, 0);
+        Matrix.rotateM(modelMatrix, 0, rotationY, 0, 1, 0);
+
+        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+        Matrix.multiplyMM(mvpMatrix, 0, mvpMatrix, 0, modelMatrix, 0);
+
+        GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0);
+
         for (int i = 0; i < 6; i++) {
             GLES20.glUniform4fv(colorHandle, 1, faceColors[i], 0);
             GLES20.glDrawElements(GLES20.GL_TRIANGLES, 6, GLES20.GL_UNSIGNED_SHORT, drawListBuffer.position(i * 6));
         }
 
         GLES20.glDisableVertexAttribArray(positionHandle);
+    }
+
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        GLES20.glViewport(0, 0, width, height);
+        float ratio = (float) width / height;
+
+        Matrix.perspectiveM(projectionMatrix, 0, 45, ratio, 1, 10);
+        Matrix.setLookAtM(viewMatrix, 0, 0, 0, 5, 0, 0, 0, 0, 1, 0);
+    }
+
+    public void setRotation(float dx, float dy) {
+        rotationX += dy * 0.5f;
+        rotationY += dx * 0.5f;
+    }
+
+    private int loadShader(int type, String shaderCode) {
+        int shader = GLES20.glCreateShader(type);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+        return shader;
     }
 }
