@@ -18,10 +18,10 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
     private ShortBuffer drawListBuffer;
 
     private final String vertexShaderCode =
+            "uniform mat4 uMVPMatrix;" +  // MVP 행렬 추가
             "attribute vec4 vPosition;" +
-            "uniform mat4 uMVPMatrix;" +
             "void main() {" +
-            "  gl_Position = uMVPMatrix * vPosition;" +
+            "  gl_Position = uMVPMatrix * vPosition;" + // 🚀 변환 행렬 적용
             "}";
 
     private final String fragmentShaderCode =
@@ -32,7 +32,7 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
             "}";
 
     private int program;
-    private int positionHandle, colorHandle;
+    private int positionHandle, colorHandle, mvpMatrixHandle;
     private float[] projectionMatrix = new float[16];
     private float[] modelMatrix = new float[16];
 
@@ -98,13 +98,7 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glAttachShader(program, fragmentShader);
         GLES20.glLinkProgram(program);
 
-        int[] linked = new int[1];
-        GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linked, 0);
-        if (linked[0] == 0) {
-            Log.e("GLRenderer", "Error: Shader program linking failed!");
-            GLES20.glDeleteProgram(program);
-            program = 0;
-        }
+        mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix");
     }
 
     @Override
@@ -117,26 +111,17 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition");
         colorHandle = GLES20.glGetUniformLocation(program, "vColor");
 
-        if (drawListBuffer == null) {
-            Log.e("GLRenderer", "Error: drawListBuffer is null!");
-            return;
-        }
-
         GLES20.glEnableVertexAttribArray(positionHandle);
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
         GLES20.glUniform4fv(colorHandle, 1, new float[]{0.6f, 0.8f, 1.0f, 1.0f}, 0);
 
-        Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.rotateM(modelMatrix, 0, rotationX, 0, 1, 0);
-        Matrix.rotateM(modelMatrix, 0, rotationY, 1, 0, 0);
+        // 🚀 MVP 행렬 적용
+        float[] mvpMatrix = new float[16];
+        Matrix.setIdentityM(mvpMatrix, 0);
+        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, modelMatrix, 0);
+        GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
-
-        int error;
-        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-            Log.e("GLRenderer", "OpenGL Error: " + error);
-        }
-
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
 
@@ -151,19 +136,11 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         rotationX += dx * 0.5f;
         rotationY += dy * 0.5f;
     }
-    private int loadShader(int type, String shaderCode) {
-    int shader = GLES20.glCreateShader(type);
-    GLES20.glShaderSource(shader, shaderCode);
-    GLES20.glCompileShader(shader);
 
-    int[] compiled = new int[1];
-    GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
-    if (compiled[0] == 0) {
-        Log.e("Shader", "Could not compile shader " + type + ":");
-        Log.e("Shader", GLES20.glGetShaderInfoLog(shader));
-        GLES20.glDeleteShader(shader);
-        return 0;
+    private int loadShader(int type, String shaderCode) {
+        int shader = GLES20.glCreateShader(type);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+        return shader;
     }
-    return shader;
-}
 }
