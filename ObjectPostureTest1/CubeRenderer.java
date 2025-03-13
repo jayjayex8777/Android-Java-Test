@@ -33,6 +33,7 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
 
     private int program;
     private int positionHandle, colorHandle;
+    private float[] projectionMatrix = new float[16];
     private float[] modelMatrix = new float[16];
 
     private float rotationX = 0;
@@ -73,6 +74,8 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         drawListBuffer = dlb.asShortBuffer();
         drawListBuffer.put(drawOrder);
         drawListBuffer.position(0);
+
+        Log.d("GLRenderer", "Cube data initialized.");
     }
 
     @Override
@@ -128,31 +131,24 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         Matrix.rotateM(modelMatrix, 0, rotationY, 1, 0, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+
+        int error;
+        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            Log.e("GLRenderer", "OpenGL Error: " + error);
+        }
+
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
+        float ratio = (float) width / height;
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
     }
 
     public void setRotation(float dx, float dy) {
         rotationX += dx * 0.5f;
         rotationY += dy * 0.5f;
-    }
-
-    private int loadShader(int type, String shaderCode) {
-        int shader = GLES20.glCreateShader(type);
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-
-        int[] compiled = new int[1];
-        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
-        if (compiled[0] == 0) {
-            Log.e("Shader", "Could not compile shader " + type + ":");
-            GLES20.glDeleteShader(shader);
-            return 0;
-        }
-        return shader;
     }
 }
