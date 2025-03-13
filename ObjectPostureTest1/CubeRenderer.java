@@ -34,7 +34,9 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
     private int program;
     private int positionHandle, colorHandle, mvpMatrixHandle;
     private float[] projectionMatrix = new float[16];
+    private float[] viewMatrix = new float[16];
     private float[] modelMatrix = new float[16];
+    private float[] mvpMatrix = new float[16]; // 최종 변환 행렬
 
     private float rotationX = 0;
     private float rotationY = 0;
@@ -116,9 +118,13 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glUniform4fv(colorHandle, 1, new float[]{0.6f, 0.8f, 1.0f, 1.0f}, 0);
 
         // 🚀 MVP 행렬 적용
-        float[] mvpMatrix = new float[16];
-        Matrix.setIdentityM(mvpMatrix, 0);
-        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, modelMatrix, 0);
+        Matrix.setIdentityM(modelMatrix, 0);
+        Matrix.rotateM(modelMatrix, 0, rotationX, 0, 1, 0);
+        Matrix.rotateM(modelMatrix, 0, rotationY, 1, 0, 0);
+        
+        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+        Matrix.multiplyMM(mvpMatrix, 0, mvpMatrix, 0, modelMatrix, 0);
+        
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
@@ -130,6 +136,7 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glViewport(0, 0, width, height);
         float ratio = (float) width / height;
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+        Matrix.setLookAtM(viewMatrix, 0, 0, 0, 5, 0, 0, 0, 0, 1, 0);
     }
 
     public void setRotation(float dx, float dy) {
