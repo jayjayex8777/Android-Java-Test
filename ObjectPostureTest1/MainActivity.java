@@ -1,7 +1,7 @@
 package com.example.objectposturetest1;
 
-import android.os.Bundle;
 import android.opengl.GLSurfaceView;
+import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -37,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
                 float y = event.getY();
 
                 switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        previousX = x;
+                        previousY = y;
+                        return true;
                     case MotionEvent.ACTION_MOVE:
                         float dx = x - previousX;
                         float dy = y - previousY;
