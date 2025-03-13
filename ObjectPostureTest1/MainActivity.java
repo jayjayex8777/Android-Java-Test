@@ -17,20 +17,21 @@ public class MainActivity extends AppCompatActivity {
     private PrismRenderer renderer;
     private float previousX;
     private float previousY;
-    private static final float TOUCH_SCALE_FACTOR = 180.0f / 320; // Sensitivity for rotation
+    private static final float TOUCH_SCALE_FACTOR = 180.0f / 320; // 회전 민감도
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
 
-        // Initialize GLSurfaceView
+        // GLSurfaceView 초기화
         glSurfaceView = new GLSurfaceView(this);
-        glSurfaceView.setEGLContextClientVersion(2); // Use OpenGL ES 2.0
+        glSurfaceView.setEGLContextClientVersion(2); // OpenGL ES 2.0 사용
         renderer = new PrismRenderer();
         glSurfaceView.setRenderer(renderer);
+        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY); // 터치 시에만 렌더링
 
-        // Handle touch events
+        // 터치 이벤트 처리
         glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -42,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
                         float dx = x - previousX;
                         float dy = y - previousY;
 
-                        // Rotate based on touch movement
+                        // 터치 이동에 따라 회전
                         renderer.setRotationY(renderer.getRotationY() + (dx * TOUCH_SCALE_FACTOR));
                         renderer.setRotationX(renderer.getRotationX() + (dy * TOUCH_SCALE_FACTOR));
                         glSurfaceView.requestRender();
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(glSurfaceView);
 
-        // Handle window insets for edge-to-edge
+        // Edge-to-edge 처리를 위한 인셋 설정
         ViewCompat.setOnApplyWindowInsetsListener(glSurfaceView, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
