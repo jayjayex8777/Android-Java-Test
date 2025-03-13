@@ -22,44 +22,44 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
     private float rotationY = 0f;
 
     // 직육면체 정점 (폭 1, 높이 3, 깊이 1)
-    private final float[] vertices = {
-        // 앞면
-        -0.5f, -1.5f,  0.5f,  // 0
-         0.5f, -1.5f,  0.5f,  // 1
-         0.5f,  1.5f,  0.5f,  // 2
-        -0.5f,  1.5f,  0.5f,  // 3
-        // 뒷면
-        -0.5f, -1.5f, -0.5f,  // 4
-         0.5f, -1.5f, -0.5f,  // 5
-         0.5f,  1.5f, -0.5f,  // 6
-        -0.5f,  1.5f, -0.5f   // 7
+    private final floatvertices = {
+            // 앞면
+            -0.5f, -1.5f, 0.5f,  // 0
+            0.5f, -1.5f, 0.5f,   // 1
+            0.5f, 1.5f, 0.5f,    // 2
+            -0.5f, 1.5f, 0.5f,   // 3
+            // 뒷면
+            -0.5f, -1.5f, -0.5f, // 4
+            0.5f, -1.5f, -0.5f,  // 5
+            0.5f, 1.5f, -0.5f,   // 6
+            -0.5f, 1.5f, -0.5f    // 7
     };
 
     // 인덱스 (삼각형으로 면 정의)
-    private final short[] indices = {
-        0, 1, 2, 2, 3, 0,  // 앞면
-        1, 5, 6, 6, 2, 1,  // 오른쪽 면
-        5, 4, 7, 7, 6, 5,  // 뒷면
-        4, 0, 3, 3, 7, 4,  // 왼쪽 면
-        3, 2, 6, 6, 7, 3,  // 윗면
-        4, 5, 1, 1, 0, 4   // 아랫면
+    private final shortindices = {
+            0, 1, 2, 2, 3, 0,  // 앞면
+            1, 5, 6, 6, 2, 1,  // 오른쪽 면
+            5, 4, 7, 7, 6, 5,  // 뒷면
+            4, 0, 3, 3, 7, 4,  // 왼쪽 면
+            3, 2, 6, 6, 7, 3,  // 윗면
+            4, 5, 1, 1, 0, 4   // 아랫면
     };
 
-    private final float[] color = {0.0f, 0.5f, 1.0f, 1.0f}; // 연한 파란색
+    private final floatprismColor = {0.0f, 0.5f, 1.0f, 1.0f}; // 연한 파란색
 
     private final String vertexShaderCode =
-        "uniform mat4 uMVPMatrix;" +
-        "attribute vec4 vPosition;" +
-        "void main() {" +
-        "  gl_Position = uMVPMatrix * vPosition;" +
-        "}";
+            "uniform mat4 uMVPMatrix;" +
+                    "attribute vec4 vPosition;" +
+                    "void main() {" +
+                    "  gl_Position = uMVPMatrix * vPosition;" +
+                    "}";
 
     private final String fragmentShaderCode =
-        "precision mediump float;" +
-        "uniform vec4 vColor;" +
-        "void main() {" +
-        "  gl_FragColor = vColor;" +
-        "}";
+            "precision mediump float;" +
+                    "uniform vec4 vColor;" +
+                    "void main() {" +
+                    "  gl_FragColor = vColor;" +
+                    "}";
 
     public PrismRenderer() {
         // 정점 버퍼
@@ -80,23 +80,31 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
         int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
 
+        if (vertexShader == -1 || fragmentShader == -1) {
+            // 셰이더 컴파일 실패 시 처리
+            Log.e("PrismRenderer", "Shader compilation failed. Program will not be created.");
+            mProgram = -1; // 프로그램 생성을 막기 위해 -1로 설정
+            return;
+        }
+
         mProgram = GLES20.glCreateProgram();
         GLES20.glAttachShader(mProgram, vertexShader);
         GLES20.glAttachShader(mProgram, fragmentShader);
         GLES20.glLinkProgram(mProgram);
 
         // 셰이더 링크 오류 확인
-        int[] linkStatus = new int[1];
+        intlinkStatus = new int[1];
         GLES20.glGetProgramiv(mProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
         if (linkStatus[0] == 0) {
             Log.e("PrismRenderer", "Program link error: " + GLES20.glGetProgramInfoLog(mProgram));
             GLES20.glDeleteProgram(mProgram);
+            mProgram = -1; // 프로그램 생성을 막기 위해 -1로 설정
         }
     }
 
-    private final float[] projectionMatrix = new float[16];
-    private final float[] viewMatrix = new float[16];
-    private final float[] mvpMatrix = new float[16];
+    private final floatprojectionMatrix = new float[16];
+    private final floatviewMatrix = new float[16];
+    private final floatmvpMatrix = new float[16];
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -115,17 +123,22 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
+        // 프로그램 생성 실패 시 렌더링하지 않음
+        if (mProgram == -1) {
+            return;
+        }
+
         // 카메라 위치 (객체가 보이도록 충분히 뒤로)
         Matrix.setLookAtM(viewMatrix, 0, 0, 0, -5, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // 모델 행렬 (회전 적용)
-        float[] modelMatrix = new float[16];
+        floatmodelMatrix = new float[16];
         Matrix.setIdentityM(modelMatrix, 0);
         Matrix.rotateM(modelMatrix, 0, rotationX, 1f, 0f, 0f); // X축 회전
         Matrix.rotateM(modelMatrix, 0, rotationY, 0f, 1f, 0f); // Y축 회전
 
         // MVP 행렬 계산
-        float[] tempMatrix = new float[16];
+        floattempMatrix = new float[16];
         Matrix.multiplyMM(tempMatrix, 0, viewMatrix, 0, modelMatrix, 0);
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, tempMatrix, 0);
 
@@ -139,7 +152,7 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
 
         // 색상 전달
         int colorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-        GLES20.glUniform4fv(colorHandle, 1, color, 0);
+        GLES20.glUniform4fv(colorHandle, 1, prismColor, 0);
 
         // MVP 행렬 전달
         int mvpMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
@@ -163,7 +176,7 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
         GLES20.glCompileShader(shader);
 
         // 컴파일 오류 확인
-        int[] compileStatus = new int[1];
+        intcompileStatus = new int[1];
         GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compileStatus, 0);
         if (compileStatus[0] == 0) {
             Log.e("PrismRenderer", "Shader compile error: " + GLES20.glGetShaderInfoLog(shader));
@@ -173,8 +186,19 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
         return shader;
     }
 
-    public float getRotationX() { return rotationX; }
-    public void setRotationX(float rotationX) { this.rotationX = rotationX; }
-    public float getRotationY() { return rotationY; }
-    public void setRotationY(float rotationY) { this.rotationY = rotationY; }
+    public float getRotationX() {
+        return rotationX;
+    }
+
+    public void setRotationX(float rotationX) {
+        this.rotationX = rotationX;
+    }
+
+    public float getRotationY() {
+        return rotationY;
+    }
+
+    public void setRotationY(float rotationY) {
+        this.rotationY = rotationY;
+    }
 }
