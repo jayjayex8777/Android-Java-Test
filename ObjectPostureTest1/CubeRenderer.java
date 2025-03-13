@@ -90,4 +90,48 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
 
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition");
         if (positionHandle == -1) {
-            Log.e("GLRenderer", "Error: vPosition not found
+            Log.e("GLRenderer", "Error: vPosition not found in shader");  // 🚀 Log 사용
+        }
+
+        colorHandle = GLES20.glGetUniformLocation(program, "vColor");
+        if (colorHandle == -1) {
+            Log.e("GLRenderer", "Error: vColor not found in shader");  // 🚀 Log 사용
+        }
+
+        GLES20.glEnableVertexAttribArray(positionHandle);
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+        GLES20.glUniform4fv(colorHandle, 1, new float[]{0.6f, 0.8f, 1.0f, 1.0f}, 0);
+
+        Matrix.setIdentityM(modelMatrix, 0);
+
+        if (drawListBuffer == null) {
+            Log.e("GLRenderer", "Error: drawListBuffer is null!");  // 🚀 Log 사용
+            return;
+        }
+
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+        GLES20.glDisableVertexAttribArray(positionHandle);
+    }
+
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        GLES20.glViewport(0, 0, width, height);
+    }
+
+    private int loadShader(int type, String shaderCode) {
+        int shader = GLES20.glCreateShader(type);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+
+        // 🚨 쉐이더 컴파일 에러 확인
+        int[] compiled = new int[1];
+        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+        if (compiled[0] == 0) {
+            Log.e("Shader", "Could not compile shader " + type + ":");
+            Log.e("Shader", GLES20.glGetShaderInfoLog(shader));
+            GLES20.glDeleteShader(shader);
+            return 0;
+        }
+        return shader;
+    }
+}
