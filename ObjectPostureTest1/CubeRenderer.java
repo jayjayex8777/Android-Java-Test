@@ -3,6 +3,7 @@ package objectposturetest1;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.util.Log;  // 🚀 Log 클래스 import 추가
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -31,14 +32,8 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
             "}";
 
     private int program;
-    private int positionHandle, colorHandle, mvpMatrixHandle;
-    private float[] mvpMatrix = new float[16];
-    private float[] projectionMatrix = new float[16];
-    private float[] viewMatrix = new float[16];
+    private int positionHandle, colorHandle;
     private float[] modelMatrix = new float[16];
-
-    private float rotationX = 0;
-    private float rotationY = 0;
 
     private final float[] cubeCoords = {
             -0.2f,  1.0f,  0.2f,  
@@ -59,8 +54,6 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
             0, 1, 4, 4, 1, 5,
             2, 3, 6, 6, 3, 7
     };
-
-    private final float[] color = {0.6f, 0.8f, 1.0f, 1.0f}; 
 
     public CubeRenderer() {
         ByteBuffer bb = ByteBuffer.allocateDirect(cubeCoords.length * 4);
@@ -96,45 +89,5 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glUseProgram(program);
 
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition");
-        GLES20.glEnableVertexAttribArray(positionHandle);
-        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-
-        colorHandle = GLES20.glGetUniformLocation(program, "vColor");
-        GLES20.glUniform4fv(colorHandle, 1, color, 0);
-
-        Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.rotateM(modelMatrix, 0, rotationX, 0, 1, 0);
-        Matrix.rotateM(modelMatrix, 0, rotationY, 1, 0, 0);
-
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
-        GLES20.glDisableVertexAttribArray(positionHandle);
-    }
-
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        GLES20.glViewport(0, 0, width, height);
-        float ratio = (float) width / height;
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
-    }
-
-    public void setRotation(float dx, float dy) {
-        rotationX += dx * 0.5f;
-        rotationY += dy * 0.5f;
-    }
-    private int loadShader(int type, String shaderCode) {
-        int shader = GLES20.glCreateShader(type);
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-
-        // 🚨 쉐이더 컴파일 에러 확인
-        int[] compiled = new int[1];
-        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
-        if (compiled[0] == 0) {
-            Log.e("Shader", "Could not compile shader " + type + ":");
-            Log.e("Shader", GLES20.glGetShaderInfoLog(shader));
-            GLES20.glDeleteShader(shader);
-            return 0;
-        }
-        return shader;
-    }
-}
+        if (positionHandle == -1) {
+            Log.e("GLRenderer", "Error: vPosition not found
