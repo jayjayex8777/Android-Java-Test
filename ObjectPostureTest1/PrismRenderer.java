@@ -10,40 +10,43 @@ import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 public class PrismRenderer implements GLSurfaceView.Renderer {
 
     private FloatBuffer vertexBuffer;
+    private ShortBuffer indexBuffer;
     private final int mProgram;
     private float rotationX = 0f;
     private float rotationY = 0f;
 
-    // Vertices for a vertically elongated rectangular prism (cuboid)
+    // 세로로 길쭉한 직육면체의 정점 (폭 1, 높이 3, 깊이 1)
     private final float[] vertices = {
-        // Front face
-        -0.5f, -1.5f,  0.5f,  // Bottom-left
-         0.5f, -1.5f,  0.5f,  // Bottom-right
-         0.5f,  1.5f,  0.5f,  // Top-right
-        -0.5f,  1.5f,  0.5f,  // Top-left
-        // Back face
-        -0.5f, -1.5f, -0.5f,  // Bottom-left
-         0.5f, -1.5f, -0.5f,  // Bottom-right
-         0.5f,  1.5f, -0.5f,  // Top-right
-        -0.5f,  1.5f, -0.5f   // Top-left
+        // 앞면
+        -0.5f, -1.5f,  0.5f,  // 0
+         0.5f, -1.5f,  0.5f,  // 1
+         0.5f,  1.5f,  0.5f,  // 2
+        -0.5f,  1.5f,  0.5f,  // 3
+        // 뒷면
+        -0.5f, -1.5f, -0.5f,  // 4
+         0.5f, -1.5f, -0.5f,  // 5
+         0.5f,  1.5f, -0.5f,  // 6
+        -0.5f,  1.5f, -0.5f   // 7
     };
 
+    // 인덱스 (삼각형으로 면을 정의)
     private final short[] indices = {
-        0, 1, 2, 2, 3, 0,  // Front
-        1, 5, 6, 6, 2, 1,  // Right
-        5, 4, 7, 7, 6, 5,  // Back
-        4, 0, 3, 3, 7, 4,  // Left
-        3, 2, 6, 6, 7, 3,  // Top
-        4, 5, 1, 1, 0, 4   // Bottom
+        0, 1, 2, 2, 3, 0,  // 앞면
+        1, 5, 6, 6, 2, 1,  // 오른쪽 면
+        5, 4, 7, 7, 6, 5,  // 뒷면
+        4, 0, 3, 3, 7, 4,  // 왼쪽 면
+        3, 2, 6, 6, 7, 3,  // 윗면
+        4, 5, 1, 1, 0, 4   // 아랫면
     };
 
-    private final float[] color = {0.0f, 0.5f, 1.0f, 1.0f}; // Light blue color
+    private final float[] color = {0.0f, 0.5f, 1.0f, 1.0f}; // 연한 파란색
 
-    // Vertex and fragment shaders
+    // Vertex Shader
     private final String vertexShaderCode =
         "uniform mat4 uMVPMatrix;" +
         "attribute vec4 vPosition;" +
@@ -51,6 +54,7 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
         "  gl_Position = uMVPMatrix * vPosition;" +
         "}";
 
+    // Fragment Shader
     private final String fragmentShaderCode =
         "precision mediump float;" +
         "uniform vec4 vColor;" +
@@ -59,18 +63,25 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
         "}";
 
     public PrismRenderer() {
-        // Initialize vertex buffer
+        // 정점 버퍼 초기화
         ByteBuffer bb = ByteBuffer.allocateDirect(vertices.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
         vertexBuffer.put(vertices);
         vertexBuffer.position(0);
 
-        // Compile shaders
+        // 인덱스 버퍼 초기화
+        ByteBuffer ibb = ByteBuffer.allocateDirect(indices.length * 2);
+        ibb.order(ByteOrder.nativeOrder());
+        indexBuffer = ibb.asShortBuffer();
+        indexBuffer.put(indices);
+        indexBuffer.position(0);
+
+        // 셰이더 컴파일
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
         int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
 
-        // Create and link program
+        // 프로그램 생성 및 링크
         mProgram = GLES20.glCreateProgram();
         GLES20.glAttachShader(mProgram, vertexShader);
         GLES20.glAttachShader(mProgram, fragmentShader);
@@ -79,9 +90,13 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        GLES20.glClearColor(0.9f, 0.9f, 0.9f, 1.0f); // Light gray background
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST); // Enable depth for 3D
+        GLES20.glClearColor(0.9f, 0.9f, 0.9f, 1.0f); // 연한 회색 배경
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST); // 3D 깊이 활성화
     }
+
+    private final float[] projectionMatrix = new float[16];
+    private final float[] viewMatrix = new float[16];
+    private final float[] mvpMatrix = new float[16];
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -90,47 +105,41 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
     }
 
-    private final float[] projectionMatrix = new float[16];
-    private final float[] viewMatrix = new float[16];
-    private final float[] mvpMatrix = new float[16];
-
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        // Set up camera
+        // 카메라 설정
         Matrix.setLookAtM(viewMatrix, 0, 0, 0, -5, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
-        // Apply rotation
+        // 모델 행렬에 회전 적용
         float[] modelMatrix = new float[16];
         Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.rotateM(modelMatrix, 0, rotationX, 1f, 0f, 0f); // X-axis rotation
-        Matrix.rotateM(modelMatrix, 0, rotationY, 0f, 1f, 0f); // Y-axis rotation
+        Matrix.rotateM(modelMatrix, 0, rotationX, 1f, 0f, 0f); // X축 회전
+        Matrix.rotateM(modelMatrix, 0, rotationY, 0f, 1f, 0f); // Y축 회전
 
-        // Combine matrices
+        // MVP 행렬 계산
         Matrix.multiplyMM(mvpMatrix, 0, viewMatrix, 0, modelMatrix, 0);
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvpMatrix, 0);
 
-        // Use shader program
+        // 셰이더 프로그램 사용
         GLES20.glUseProgram(mProgram);
 
-        // Pass vertex data
+        // 정점 데이터 전달
         int positionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         GLES20.glEnableVertexAttribArray(positionHandle);
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 12, vertexBuffer);
 
-        // Pass color
+        // 색상 전달
         int colorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
         GLES20.glUniform4fv(colorHandle, 1, color, 0);
 
-        // Pass MVP matrix
+        // MVP 행렬 전달
         int mvpMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0);
 
-        // Draw the prism
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indices.length, GLES20.GL_UNSIGNED_SHORT,
-                ByteBuffer.allocateDirect(indices.length * 2).order(ByteOrder.nativeOrder())
-                        .asShortBuffer().put(indices).position(0));
+        // 프리즘 그리기
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indices.length, GLES20.GL_UNSIGNED_SHORT, indexBuffer);
 
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
