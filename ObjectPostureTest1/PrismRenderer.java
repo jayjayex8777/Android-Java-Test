@@ -39,33 +39,44 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
     private final float[] viewMatrix = new float[16];
     private final float[] mvpMatrix = new float[16];
 
-    @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        GLES20.glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+    public PrismRenderer() {
+        ByteBuffer bb = ByteBuffer.allocateDirect(vertices.length * 4);
+        bb.order(ByteOrder.nativeOrder());
+        vertexBuffer = bb.asFloatBuffer();
+        vertexBuffer.put(vertices);
+        vertexBuffer.position(0);
+
+        ByteBuffer ibb = ByteBuffer.allocateDirect(indices.length * 2);
+        ibb.order(ByteOrder.nativeOrder());
+        indexBuffer = ibb.asShortBuffer();
+        indexBuffer.put(indices);
+        indexBuffer.position(0);
+
+        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
+        int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
+
+        if (vertexShader == -1 || fragmentShader == -1) {
+            Log.e("PrismRenderer", "Shader compilation failed.");
+            mProgram = -1;
+            return;
+        }
+
+        mProgram = GLES20.glCreateProgram();
+        GLES20.glAttachShader(mProgram, vertexShader);
+        GLES20.glAttachShader(mProgram, fragmentShader);
+        GLES20.glLinkProgram(mProgram);
+
+        int[] linkStatus = new int[1];
+        GLES20.glGetProgramiv(mProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
+        if (linkStatus[0] == 0) {
+            Log.e("PrismRenderer", "Program link error: " + GLES20.glGetProgramInfoLog(mProgram));
+            GLES20.glDeleteProgram(mProgram);
+            mProgram = -1;
+        }
     }
 
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        GLES20.glViewport(0, 0, width, height);
-        float ratio = (float) width / height;
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
-    }
-
-    @Override
-    public void onDrawFrame(GL10 gl) {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-        if (mProgram == -1) return;
-        
-        // 카메라 및 변환 적용
-        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -5, 0f, 0f, 0f, 1.0f, 0.0f);
-        float[] modelMatrix = new float[16];
-        Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.rotateM(modelMatrix, 0, rotationX, 1f, 0f, 0f);
-        Matrix.rotateM(modelMatrix, 0, rotationY, 0f, 1f, 0f);
-
-        float[] tempMatrix = new float[16];
-        Matrix.multiplyMM(tempMatrix, 0, viewMatrix, 0, modelMatrix, 0);
-        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, tempMatrix, 0);
-    }
+    public float getRotationX() { return rotationX; }
+    public void setRotationX(float rotationX) { this.rotationX = rotationX; }
+    public float getRotationY() { return rotationY; }
+    public void setRotationY(float rotationY) { this.rotationY = rotationY; }
 }
