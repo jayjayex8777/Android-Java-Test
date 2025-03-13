@@ -3,7 +3,7 @@ package objectposturetest1;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.util.Log;  // 🚀 Log 클래스 import 추가
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -34,6 +34,9 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
     private int program;
     private int positionHandle, colorHandle;
     private float[] modelMatrix = new float[16];
+
+    private float rotationX = 0;
+    private float rotationY = 0;
 
     private final float[] cubeCoords = {
             -0.2f,  1.0f,  0.2f,  
@@ -90,12 +93,12 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
 
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition");
         if (positionHandle == -1) {
-            Log.e("GLRenderer", "Error: vPosition not found in shader");  // 🚀 Log 사용
+            Log.e("GLRenderer", "Error: vPosition not found in shader");
         }
 
         colorHandle = GLES20.glGetUniformLocation(program, "vColor");
         if (colorHandle == -1) {
-            Log.e("GLRenderer", "Error: vColor not found in shader");  // 🚀 Log 사용
+            Log.e("GLRenderer", "Error: vColor not found in shader");
         }
 
         GLES20.glEnableVertexAttribArray(positionHandle);
@@ -103,9 +106,11 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glUniform4fv(colorHandle, 1, new float[]{0.6f, 0.8f, 1.0f, 1.0f}, 0);
 
         Matrix.setIdentityM(modelMatrix, 0);
+        Matrix.rotateM(modelMatrix, 0, rotationX, 0, 1, 0);
+        Matrix.rotateM(modelMatrix, 0, rotationY, 1, 0, 0);
 
         if (drawListBuffer == null) {
-            Log.e("GLRenderer", "Error: drawListBuffer is null!");  // 🚀 Log 사용
+            Log.e("GLRenderer", "Error: drawListBuffer is null!");
             return;
         }
 
@@ -116,6 +121,14 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
+    }
+
+    /**
+     * 🚀 setRotation() 추가: 터치 입력을 받아 3D 객체 회전 처리
+     */
+    public void setRotation(float dx, float dy) {
+        rotationX += dx * 0.5f;
+        rotationY += dy * 0.5f;
     }
 
     private int loadShader(int type, String shaderCode) {
