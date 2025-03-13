@@ -23,43 +23,43 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
 
     // 직육면체 정점 (폭 1, 높이 3, 깊이 1)
     private final floatvertices = {
-            // 앞면
-            -0.5f, -1.5f, 0.5f,  // 0
-            0.5f, -1.5f, 0.5f,   // 1
-            0.5f, 1.5f, 0.5f,    // 2
-            -0.5f, 1.5f, 0.5f,   // 3
-            // 뒷면
-            -0.5f, -1.5f, -0.5f, // 4
-            0.5f, -1.5f, -0.5f,  // 5
-            0.5f, 1.5f, -0.5f,   // 6
-            -0.5f, 1.5f, -0.5f    // 7
+        // 앞면
+        -0.5f, -1.5f,  0.5f,  // 0
+         0.5f, -1.5f,  0.5f,  // 1
+         0.5f,  1.5f,  0.5f,  // 2
+        -0.5f,  1.5f,  0.5f,  // 3
+        // 뒷면
+        -0.5f, -1.5f, -0.5f,  // 4
+         0.5f, -1.5f, -0.5f,  // 5
+         0.5f,  1.5f,  0.5f,  // 6
+        -0.5f,  1.5f, -0.5f   // 7
     };
 
     // 인덱스 (삼각형으로 면 정의)
     private final shortindices = {
-            0, 1, 2, 2, 3, 0,  // 앞면
-            1, 5, 6, 6, 2, 1,  // 오른쪽 면
-            5, 4, 7, 7, 6, 5,  // 뒷면
-            4, 0, 3, 3, 7, 4,  // 왼쪽 면
-            3, 2, 6, 6, 7, 3,  // 윗면
-            4, 5, 1, 1, 0, 4   // 아랫면
+        0, 1, 2, 2, 3, 0,  // 앞면
+        1, 5, 6, 6, 2, 1,  // 오른쪽 면
+        5, 4, 7, 7, 6, 5,  // 뒷면
+        4, 0, 3, 3, 7, 4,  // 왼쪽 면
+        3, 2, 6, 6, 7, 3,  // 윗면
+        4, 5, 1, 1, 0, 4   // 아랫면
     };
 
     private final floatprismColor = {0.0f, 0.5f, 1.0f, 1.0f}; // 연한 파란색
 
     private final String vertexShaderCode =
-            "uniform mat4 uMVPMatrix;" +
-                    "attribute vec4 vPosition;" +
-                    "void main() {" +
-                    "  gl_Position = uMVPMatrix * vPosition;" +
-                    "}";
+        "uniform mat4 uMVPMatrix;" +
+        "attribute vec4 vPosition;" +
+        "void main() {" +
+        "  gl_Position = uMVPMatrix * vPosition;" +
+        "}";
 
     private final String fragmentShaderCode =
-            "precision mediump float;" +
-                    "uniform vec4 vColor;" +
-                    "void main() {" +
-                    "  gl_FragColor = vColor;" +
-                    "}";
+        "precision mediump float;" +
+        "uniform vec4 vColor;" +
+        "void main() {" +
+        "  gl_FragColor = vColor;" +
+        "}";
 
     public PrismRenderer() {
         // 정점 버퍼
@@ -129,7 +129,7 @@ public class PrismRenderer implements GLSurfaceView.Renderer {
         }
 
         // 카메라 위치 (객체가 보이도록 충분히 뒤로)
-        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -5, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -5, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // 모델 행렬 (회전 적용)
         floatmodelMatrix = new float[16];
