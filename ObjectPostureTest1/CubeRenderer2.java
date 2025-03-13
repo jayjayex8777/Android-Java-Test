@@ -13,24 +13,24 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class CubeRenderer implements GLSurfaceView.Renderer {
-    private FloatBuffer vertexBuffer, colorBuffer;
+    private FloatBuffer vertexBuffer;
     private ShortBuffer drawListBuffer;
 
     private final String vertexShaderCode =
         "attribute vec4 vPosition;" +
-        "attribute vec4 vColor;" + 
-        "varying vec4 fColor;" +   
         "uniform mat4 uMVPMatrix;" +
+        "uniform vec4 vColor;" +
+        "varying vec4 fColor;" +
         "void main() {" +
         "  gl_Position = uMVPMatrix * vPosition;" +
-        "  fColor = vColor;" + 
+        "  fColor = vColor;" +
         "}";
 
     private final String fragmentShaderCode =
         "precision mediump float;" +
-        "varying vec4 fColor;" + 
+        "varying vec4 fColor;" +
         "void main() {" +
-        "  gl_FragColor = fColor;" + 
+        "  gl_FragColor = fColor;" +
         "}";
 
     private int program;
@@ -42,6 +42,15 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
 
     private float rotationX = 0;
     private float rotationY = 0;
+
+    private final float[][] faceColors = {
+        {1.0f, 0.0f, 0.0f, 1.0f},  // 앞면 (빨강)
+        {0.0f, 1.0f, 0.0f, 1.0f},  // 뒷면 (초록)
+        {0.0f, 0.0f, 1.0f, 1.0f},  // 윗면 (파랑)
+        {1.0f, 1.0f, 0.0f, 1.0f},  // 아랫면 (노랑)
+        {1.0f, 0.0f, 1.0f, 1.0f},  // 왼쪽면 (자홍)
+        {0.0f, 1.0f, 1.0f, 1.0f}   // 오른쪽면 (청록)
+    };
 
     private final float[] cubeCoords = {
         -0.2f,  1.0f,  0.2f,  
@@ -63,17 +72,6 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         2, 3, 6, 6, 3, 7
     };
 
-    private final float[] cubeColors = {
-        1.0f, 0.0f, 0.0f, 1.0f,  
-        1.0f, 0.0f, 0.0f, 1.0f,  
-        0.0f, 1.0f, 0.0f, 1.0f,  
-        0.0f, 1.0f, 0.0f, 1.0f,  
-        0.0f, 0.0f, 1.0f, 1.0f,  
-        0.0f, 0.0f, 1.0f, 1.0f,  
-        1.0f, 1.0f, 0.0f, 1.0f,  
-        1.0f, 1.0f, 0.0f, 1.0f   
-    };
-
     public CubeRenderer() {
         ByteBuffer bb = ByteBuffer.allocateDirect(cubeCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
@@ -86,12 +84,6 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         drawListBuffer = dlb.asShortBuffer();
         drawListBuffer.put(drawOrder);
         drawListBuffer.position(0);
-
-        ByteBuffer cbb = ByteBuffer.allocateDirect(cubeColors.length * 4);
-        cbb.order(ByteOrder.nativeOrder());
-        colorBuffer = cbb.asFloatBuffer();
-        colorBuffer.put(cubeColors);
-        colorBuffer.position(0);
     }
 
     @Override
@@ -116,45 +108,16 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         GLES20.glUseProgram(program);
 
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition");
-        colorHandle = GLES20.glGetAttribLocation(program, "vColor");
+        colorHandle = GLES20.glGetUniformLocation(program, "vColor");
 
         GLES20.glEnableVertexAttribArray(positionHandle);
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-        GLES20.glEnableVertexAttribArray(colorHandle);
-        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 0, colorBuffer);
 
-        Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.rotateM(modelMatrix, 0, rotationX, 1, 0, 0);
-        Matrix.rotateM(modelMatrix, 0, rotationY, 0, 1, 0);
-
-        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-        Matrix.multiplyMM(mvpMatrix, 0, mvpMatrix, 0, modelMatrix, 0);
-
-        GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+        for (int i = 0; i < 6; i++) {
+            GLES20.glUniform4fv(colorHandle, 1, faceColors[i], 0);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES, 6, GLES20.GL_UNSIGNED_SHORT, drawListBuffer.position(i * 6));
+        }
 
         GLES20.glDisableVertexAttribArray(positionHandle);
-        GLES20.glDisableVertexAttribArray(colorHandle);
-    }
-
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        GLES20.glViewport(0, 0, width, height);
-        float ratio = (float) width / height;
-
-        Matrix.perspectiveM(projectionMatrix, 0, 45, ratio, 1, 10);
-        Matrix.setLookAtM(viewMatrix, 0, 0, 0, 5, 0, 0, 0, 0, 1, 0);
-    }
-
-    public void setRotation(float dx, float dy) {
-        rotationX += dy * 0.5f;
-        rotationY += dx * 0.5f;
-    }
-
-    private int loadShader(int type, String shaderCode) {
-        int shader = GLES20.glCreateShader(type);
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-        return shader;
     }
 }
