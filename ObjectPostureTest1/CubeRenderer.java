@@ -151,4 +151,19 @@ public class CubeRenderer implements GLSurfaceView.Renderer {
         rotationX += dx * 0.5f;
         rotationY += dy * 0.5f;
     }
+    private int loadShader(int type, String shaderCode) {
+    int shader = GLES20.glCreateShader(type);
+    GLES20.glShaderSource(shader, shaderCode);
+    GLES20.glCompileShader(shader);
+
+    int[] compiled = new int[1];
+    GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+    if (compiled[0] == 0) {
+        Log.e("Shader", "Could not compile shader " + type + ":");
+        Log.e("Shader", GLES20.glGetShaderInfoLog(shader));
+        GLES20.glDeleteShader(shader);
+        return 0;
+    }
+    return shader;
+}
 }
