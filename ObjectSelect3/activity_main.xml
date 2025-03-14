@@ -5,21 +5,20 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <!-- RecyclerView를 감싸는 NestedScrollView -->
-    <androidx.core.widget.NestedScrollView
+    <!-- 수평 스크롤을 지원하는 RecyclerView -->
+    <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="wrap_content"
         android:fillViewport="true"
-        android:scrollbars="vertical">
+        android:scrollbars="horizontal">
 
-        <androidx.recyclerview.widget.RecyclerView
+        <com.example.objectselect3.OrientationAwareRecyclerView
             android:id="@+id/recyclerView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
             android:scrollbars="vertical"/>
             
-    </androidx.core.widget.NestedScrollView>
+    </HorizontalScrollView>
 
     <!-- 센서 데이터 표시 영역 -->
     <TextView
