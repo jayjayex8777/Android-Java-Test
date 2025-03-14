@@ -7,9 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
-/**
- * 특정 방향(수평/수직)으로만 스크롤이 되도록 처리하는 RecyclerView
- */
 public class OrientationAwareRecyclerView extends RecyclerView {
 
     private float lastX = 0.0f;
@@ -45,7 +42,7 @@ public class OrientationAwareRecyclerView extends RecyclerView {
         boolean allowScroll = true;
 
         switch (e.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN: {
+            case MotionEvent.ACTION_DOWN:
                 lastX = e.getX();
                 lastY = e.getY();
                 if (scrolling) {
@@ -54,21 +51,13 @@ public class OrientationAwareRecyclerView extends RecyclerView {
                     return super.onInterceptTouchEvent(newEvent);
                 }
                 break;
-            }
-            case MotionEvent.ACTION_MOVE: {
-                float currentX = e.getX();
-                float currentY = e.getY();
-                float dx = Math.abs(currentX - lastX);
-                float dy = Math.abs(currentY - lastY);
+            case MotionEvent.ACTION_MOVE:
+                float dx = Math.abs(e.getX() - lastX);
+                float dy = Math.abs(e.getY() - lastY);
                 allowScroll = dy > dx ? lm.canScrollVertically() : lm.canScrollHorizontally();
                 break;
-            }
         }
 
-        if (!allowScroll) {
-            return false;
-        }
-
-        return super.onInterceptTouchEvent(e);
+        return allowScroll && super.onInterceptTouchEvent(e);
     }
 }
