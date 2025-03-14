@@ -7,13 +7,11 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import com.github.rubensousa.gravitysnaphelper.OrientationAwareRecyclerView;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -44,12 +42,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroGraph = findViewById(R.id.gyroGraph);
         accelGraph = findViewById(R.id.accelGraph);
 
-        // RecyclerView 설정 (30×30 그리드, 가로 방향)
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 30, RecyclerView.HORIZONTAL, false);
+        // OrientationAwareRecyclerView 사용하여 스크롤 개선
+        OrientationAwareRecyclerView recyclerView = findViewById(R.id.recyclerView);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 30, GridLayoutManager.HORIZONTAL, false);
         recyclerView.setLayoutManager(gridLayoutManager);
-        
-        // NestedScrollView와 함께 사용할 때 RecyclerView의 nestedScrolling을 비활성화
         recyclerView.setNestedScrollingEnabled(false);
 
         // 30×30 데이터 생성 (각 사각형에 X, Y 좌표 표시)
