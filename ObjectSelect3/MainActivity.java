@@ -11,7 +11,6 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
-import com.github.rubensousa.gravitysnaphelper.OrientationAwareRecyclerView;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -133,17 +132,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 float pitch = event.values[1];
                 float roll = event.values[2];
                 gyroTextView.setText(String.format("Yaw: %+06.2f, Pitch: %+06.2f, Roll: %+06.2f", yaw, pitch, roll));
-                gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
-                gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
-                gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
-            } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                float accelX = event.values[0];
-                float accelY = event.values[1];
-                float accelZ = event.values[2];
-                accelTextView.setText(String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f", accelX, accelY, accelZ));
-                accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
-                accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
-                accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
             }
         });
     }
