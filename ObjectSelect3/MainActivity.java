@@ -42,7 +42,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelGraph = findViewById(R.id.accelGraph);
 
         // RecyclerView 설정 (30×30 그리드)
-        OrientationAwareRecyclerView recyclerView = findViewById(R.id.recyclerView);
+        //OrientationAwareRecyclerView recyclerView = findViewById(R.id.recyclerView);
+        Custom2DScrollView customScrollView = findViewById(R.id.customScrollView);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 100);
         recyclerView.setLayoutManager(gridLayoutManager);
 
