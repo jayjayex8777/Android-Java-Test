@@ -53,7 +53,7 @@ protected void onScrollChanged(int l, int t, int oldl, int oldt) {
 
 @Override
 public boolean onInterceptTouchEvent(MotionEvent e) {
-  Log.d("VESW", "ACTION :" + e.getActionMaseked());
+  Log.d("VESW", "ACTION :" + e.getActionMasked());
   boolean allowScroll = false;
   switch (e.getActionMasked()){
     case MotionEvent.ACTION_DOWN:
@@ -62,9 +62,9 @@ public boolean onInterceptTouchEvent(MotionEvent e) {
         Log.d("VESW","MOTION ACTION DOWN");
         if (scrolling) {
           scrolling = false;
-          Log.d("VESW","MOTION Virtual ACITON DOWN");
+          Log.d("VESW","MOTION Virtual ACTION DOWN");
           MotionEvent ev = MotionEvent.obtain(e);
-          ev.setAction(MotionEvent.ACTION_UP)
+          ev.setAction(MotionEvent.ACTION_UP);
           super.onInterceptTouchEvent(ev);
         }
         break;
