@@ -3,10 +3,10 @@ package com.example.objectselect3;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.widget.FrameLayout;
 import android.widget.OverScroller;
-import android.view.View;
 
-public class Custom2DScrollView extends View {
+public class Custom2DScrollView extends FrameLayout {
     private float lastX, lastY;
     private OverScroller scroller;
     private boolean isScrollingHorizontal = false;
@@ -24,6 +24,8 @@ public class Custom2DScrollView extends View {
 
     private void init() {
         scroller = new OverScroller(getContext());
+        setVerticalScrollBarEnabled(true);
+        setHorizontalScrollBarEnabled(true);
     }
 
     @Override
