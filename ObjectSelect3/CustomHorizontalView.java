@@ -14,7 +14,7 @@ import androidx.annotation.NonNull;
 
 import java.util.logging.LogRecord;
 
-public class CustomHorizontalScroolView extends HorizontalScroolView {
+public class CustomHorizontalScrollView extends HorizontalScrollView {
   private float lastX = 0.0f;
   private float lastY = 0.0f;
   private boolean scrolling = false;
