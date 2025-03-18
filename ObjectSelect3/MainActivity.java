@@ -8,6 +8,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
@@ -46,18 +47,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Custom2DScrollView customScrollView = findViewById(R.id.customScrollView);
         LinearLayout container = new LinearLayout(this);
         container.setOrientation(LinearLayout.VERTICAL);
+        container.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, 
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
 
         // 100×100 그리드 UI 생성
         for (int y = 0; y < 100; y++) {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            ));
 
             for (int x = 0; x < 100; x++) {
                 TextView cell = new TextView(this);
                 cell.setText("X:" + x + ", Y:" + y);
-                cell.setPadding(8, 8, 8, 8);
+                cell.setPadding(4, 4, 4, 4);
+                cell.setGravity(Gravity.CENTER);
+                cell.setTextSize(10);
                 cell.setBackgroundColor(Color.parseColor("#FF5722"));
                 cell.setTextColor(Color.WHITE);
+
+                // 고정된 크기 설정
+                LinearLayout.LayoutParams cellParams = new LinearLayout.LayoutParams(80, 80);
+                cellParams.setMargins(2, 2, 2, 2);
+                cell.setLayoutParams(cellParams);
 
                 int finalX = x, finalY = y;
                 cell.setOnClickListener(v -> {
@@ -150,14 +166,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
                 gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
                 gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
-            } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                float accelX = event.values[0];
-                float accelY = event.values[1];
-                float accelZ = event.values[2];
-                accelTextView.setText(String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f", accelX, accelY, accelZ));
-                accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
-                accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
-                accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
             }
         });
     }
