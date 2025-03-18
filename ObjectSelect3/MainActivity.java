@@ -1,5 +1,6 @@
 package com.example.objectselect3;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -7,10 +8,10 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -22,11 +23,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager sensorManager;
     private Sensor accelerometer, gyroscope;
     private TextView gyroTextView, accelTextView;
-    
+
     private GraphView gyroGraph, accelGraph;
     private LineGraphSeries<DataPoint> gyroYawSeries, gyroPitchSeries, gyroRollSeries;
     private LineGraphSeries<DataPoint> accelXSeries, accelYSeries, accelZSeries;
-    
+
     private int graphXIndex = 0;
 
     @Override
@@ -41,23 +42,37 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroGraph = findViewById(R.id.gyroGraph);
         accelGraph = findViewById(R.id.accelGraph);
 
-        // RecyclerView 설정 (30×30 그리드)
-        //OrientationAwareRecyclerView recyclerView = findViewById(R.id.recyclerView);
+        // Custom2DScrollView 가져오기
         Custom2DScrollView customScrollView = findViewById(R.id.customScrollView);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 100);
-        recyclerView.setLayoutManager(gridLayoutManager);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
 
-        // 30×30 데이터 생성 (각 사각형에 X, Y 좌표 표시)
-        List<String> dataList = new ArrayList<>();
+        // 100×100 그리드 UI 생성
         for (int y = 0; y < 100; y++) {
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+
             for (int x = 0; x < 100; x++) {
-                dataList.add("X: " + x + ", Y: " + y);
+                TextView cell = new TextView(this);
+                cell.setText("X:" + x + ", Y:" + y);
+                cell.setPadding(8, 8, 8, 8);
+                cell.setBackgroundColor(Color.parseColor("#FF5722"));
+                cell.setTextColor(Color.WHITE);
+
+                int finalX = x, finalY = y;
+                cell.setOnClickListener(v -> {
+                    Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+                    intent.putExtra("coordinate", "X: " + finalX + ", Y: " + finalY);
+                    startActivity(intent);
+                });
+
+                row.addView(cell);
             }
+            container.addView(row);
         }
 
-        // 어댑터 설정 (터치 시 DetailActivity 전환)
-        RectangleAdapter adapter = new RectangleAdapter(dataList);
-        recyclerView.setAdapter(adapter);
+        // Custom2DScrollView에 추가
+        customScrollView.addView(container);
 
         // 센서 매니저 설정
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
