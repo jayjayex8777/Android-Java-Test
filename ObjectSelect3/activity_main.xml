@@ -6,14 +6,13 @@
     android:padding="8dp">
 
     <!-- 2D 스크롤 영역 : HorizontalScrollView와 ScrollView로 감싸서 좌우/상하 스크롤 지원 -->
-    <com.example.objectselect3.CustomHorizontalScrollView
-        android:id="@+id/customScrollView"
+    <com.example.objectselect3.CustomHorizontalScrollView        
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <com.example.objectselect3.OrientationAwareRecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="wrap_content"
-            android:layout_height=300dp" />
+            android:layout_height="300dp" />
     </com.example.objectselect3.CustomHorizontalScrollView>
         
     <TextView
@@ -34,9 +33,9 @@
     <TextView
         android:id="@+id/accelTextView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingVertical="5dp"
+        android:layout_height="wrap_content"        
         android:layout_marginTop="16dp"
+        android:paddingVertical="5dp"
         android:text="Accel X: +00.00, Y: +00.00, Z: +00.00"
         android:textSize="14sp"/>
 
