@@ -1,6 +1,6 @@
+
 package com.example.objectselect3;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -8,11 +8,10 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -24,11 +23,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager sensorManager;
     private Sensor accelerometer, gyroscope;
     private TextView gyroTextView, accelTextView;
-
+    
     private GraphView gyroGraph, accelGraph;
     private LineGraphSeries<DataPoint> gyroYawSeries, gyroPitchSeries, gyroRollSeries;
     private LineGraphSeries<DataPoint> accelXSeries, accelYSeries, accelZSeries;
-
+    
     private int graphXIndex = 0;
 
     @Override
@@ -43,52 +42,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroGraph = findViewById(R.id.gyroGraph);
         accelGraph = findViewById(R.id.accelGraph);
 
-        // Custom2DScrollView 가져오기
-        Custom2DScrollView customScrollView = findViewById(R.id.customScrollView);
-        LinearLayout container = new LinearLayout(this);
-        container.setOrientation(LinearLayout.VERTICAL);
-        container.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, 
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
+        // RecyclerView 설정 (30×30 그리드)
+        OrientationAwareRecyclerView recyclerView = findViewById(R.id.recyclerView);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 100);
+        recyclerView.setLayoutManager(gridLayoutManager);
 
-        // 100×100 그리드 UI 생성
+        // 30×30 데이터 생성 (각 사각형에 X, Y 좌표 표시)
+        List<String> dataList = new ArrayList<>();
         for (int y = 0; y < 100; y++) {
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, 
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            ));
-
             for (int x = 0; x < 100; x++) {
-                TextView cell = new TextView(this);
-                cell.setText("X:" + x + ", Y:" + y);
-                cell.setPadding(4, 4, 4, 4);
-                cell.setGravity(Gravity.CENTER);
-                cell.setTextSize(10);
-                cell.setBackgroundColor(Color.parseColor("#FF5722"));
-                cell.setTextColor(Color.WHITE);
-
-                // 고정된 크기 설정
-                LinearLayout.LayoutParams cellParams = new LinearLayout.LayoutParams(80, 80);
-                cellParams.setMargins(2, 2, 2, 2);
-                cell.setLayoutParams(cellParams);
-
-                int finalX = x, finalY = y;
-                cell.setOnClickListener(v -> {
-                    Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                    intent.putExtra("coordinate", "X: " + finalX + ", Y: " + finalY);
-                    startActivity(intent);
-                });
-
-                row.addView(cell);
+                dataList.add("X: " + x + ", Y: " + y);
             }
-            container.addView(row);
         }
 
-        // Custom2DScrollView에 추가
-        customScrollView.addView(container);
+        // 어댑터 설정 (터치 시 DetailActivity 전환)
+        RectangleAdapter adapter = new RectangleAdapter(dataList);
+        recyclerView.setAdapter(adapter);
 
         // 센서 매니저 설정
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -166,6 +135,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
                 gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
                 gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
+            } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                float accelX = event.values[0];
+                float accelY = event.values[1];
+                float accelZ = event.values[2];
+                accelTextView.setText(String.format("Accel X: %+06.2f, Y: %+06.2f, Z: %+06.2f", accelX, accelY, accelZ));
+                accelXSeries.appendData(new DataPoint(graphXIndex, accelX), true, 100);
+                accelYSeries.appendData(new DataPoint(graphXIndex, accelY), true, 100);
+                accelZSeries.appendData(new DataPoint(graphXIndex, accelZ), true, 100);
             }
         });
     }
