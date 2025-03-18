@@ -1,6 +1,6 @@
-
 package com.example.objectselect3;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -8,10 +8,14 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.HorizontalScrollView;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -27,8 +31,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private GraphView gyroGraph, accelGraph;
     private LineGraphSeries<DataPoint> gyroYawSeries, gyroPitchSeries, gyroRollSeries;
     private LineGraphSeries<DataPoint> accelXSeries, accelYSeries, accelZSeries;
-    
+    private OrientationAwareRecyclerView recyclerView;
     private int graphXIndex = 0;
+    private static final int grid_size = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,8 +54,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // 30×30 데이터 생성 (각 사각형에 X, Y 좌표 표시)
         List<String> dataList = new ArrayList<>();
-        for (int y = 0; y < 100; y++) {
-            for (int x = 0; x < 100; x++) {
+        for (int y = 0; y < grid_size; y++) {
+            for (int x = 0; x < grid_size; x++) {
                 dataList.add("X: " + x + ", Y: " + y);
             }
         }
