@@ -43,13 +43,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // RecyclerView 설정 (30×30 그리드)
         OrientationAwareRecyclerView recyclerView = findViewById(R.id.recyclerView);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 30);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 100);
         recyclerView.setLayoutManager(gridLayoutManager);
 
         // 30×30 데이터 생성 (각 사각형에 X, Y 좌표 표시)
         List<String> dataList = new ArrayList<>();
-        for (int y = 0; y < 30; y++) {
-            for (int x = 0; x < 30; x++) {
+        for (int y = 0; y < 100; y++) {
+            for (int x = 0; x < 100; x++) {
                 dataList.add("X: " + x + ", Y: " + y);
             }
         }
