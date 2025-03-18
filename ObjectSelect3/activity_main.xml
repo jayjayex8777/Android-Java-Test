@@ -5,23 +5,13 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <!-- 2차원 스크롤 영역: HorizontalScrollView와 ScrollView로 감싸서 좌우/상하 스크롤 지원 -->
-    <HorizontalScrollView
+    <!-- 2D 스크롤 영역 (기존 RecyclerView 대신 Custom2DScrollView 사용) -->
+    <com.example.objectselect3.Custom2DScrollView
+        android:id="@+id/customScrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fillViewport="true"
-        android:scrollbars="horizontal">
-        <ScrollView
-            android:layout_width="wrap_content"
-            android:layout_height="300dp"
-            android:fillViewport="true"
-            android:scrollbars="vertical">
-            <com.example.objectselect3.OrientationAwareRecyclerView
-                android:id="@+id/recyclerView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </ScrollView>
-    </HorizontalScrollView>
+        android:layout_height="300dp"
+        android:background="#E0E0E0"
+        android:scrollbars="both"/>
 
     <!-- 센서 데이터 표시 영역 -->
     <TextView
