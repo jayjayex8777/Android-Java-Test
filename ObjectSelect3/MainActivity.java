@@ -33,7 +33,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -61,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // 권한 확인 및 요청
+        // 외부 저장소 권한 확인
         checkStoragePermission();
 
         // UI 연결
@@ -133,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     if (!downloadDir.exists()) downloadDir.mkdirs();
                     csvFile = new File(downloadDir, fileName);
                     csvWriter = new BufferedWriter(new FileWriter(csvFile));
-                    csvWriter.write("Timestamp,SensorType,X,Y,Z\n");
+                    csvWriter.write("Timestamp,TimeString,SensorType,X,Y,Z\n");
                     isCsvRecording = true;
                     Toast.makeText(this, "CSV 저장 시작됨", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
@@ -191,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         runOnUiThread(() -> {
             graphXIndex++;
             long timestamp = System.currentTimeMillis();
+            String timeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(timestamp));
             String line = "";
 
             if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
@@ -201,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 gyroYawSeries.appendData(new DataPoint(graphXIndex, yaw), true, 100);
                 gyroPitchSeries.appendData(new DataPoint(graphXIndex, pitch), true, 100);
                 gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
-                line = String.format("%d,GYROSCOPE,%.4f,%.4f,%.4f\n", timestamp, yaw, pitch, roll);
+                line = String.format("%d,%s,GYROSCOPE,%.4f,%.4f,%.4f\n", timestamp, timeString, yaw, pitch, roll);
             } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 float ax = event.values[0];
                 float ay = event.values[1];
@@ -210,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 accelXSeries.appendData(new DataPoint(graphXIndex, ax), true, 100);
                 accelYSeries.appendData(new DataPoint(graphXIndex, ay), true, 100);
                 accelZSeries.appendData(new DataPoint(graphXIndex, az), true, 100);
-                line = String.format("%d,ACCELEROMETER,%.4f,%.4f,%.4f\n", timestamp, ax, ay, az);
+                line = String.format("%d,%s,ACCELEROMETER,%.4f,%.4f,%.4f\n", timestamp, timeString, ax, ay, az);
             }
 
             if (isCsvRecording && csvWriter != null) {
@@ -239,7 +242,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    // Android 11 이상에서 MANAGE_EXTERNAL_STORAGE 권한 확인
     private void checkStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
