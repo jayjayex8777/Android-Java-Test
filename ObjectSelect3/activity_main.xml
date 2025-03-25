@@ -5,8 +5,8 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <!-- 2D 스크롤 영역 : HorizontalScrollView와 ScrollView로 감싸서 좌우/상하 스크롤 지원 -->
-    <com.example.objectselect3.CustomHorizontalScrollView        
+    <!-- 2D 스크롤 영역 -->
+    <com.example.objectselect3.CustomHorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <com.example.objectselect3.OrientationAwareRecyclerView
@@ -14,7 +14,8 @@
             android:layout_width="wrap_content"
             android:layout_height="300dp" />
     </com.example.objectselect3.CustomHorizontalScrollView>
-        
+
+    <!-- 자이로 센서 텍스트 -->
     <TextView
         android:id="@+id/gyroTextView"
         android:layout_width="wrap_content"
@@ -24,25 +25,57 @@
         android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00"
         android:textSize="14sp"/>
 
+    <!-- 자이로 그래프 -->
     <com.jjoe64.graphview.GraphView
         android:id="@+id/gyroGraph"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_marginTop="16dp"/>
 
+    <!-- 가속도 센서 텍스트 -->
     <TextView
         android:id="@+id/accelTextView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"        
+        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:paddingVertical="5dp"
         android:text="Accel X: +00.00, Y: +00.00, Z: +00.00"
         android:textSize="14sp"/>
 
+    <!-- 가속도 그래프 -->
     <com.jjoe64.graphview.GraphView
         android:id="@+id/accelGraph"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_marginTop="16dp"/>
+
+    <!-- CSV 제어 버튼 영역 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/startCsvButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CSV 저장 시작"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/stopCsvButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CSV 저장 중지"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/deleteCsvButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CSV 삭제"/>
+    </LinearLayout>
 
 </LinearLayout>
