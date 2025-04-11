@@ -1,33 +1,12 @@
 package com.example.objectselect3;
 
-import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Environment;
-import android.provider.Settings;
-import android.view.MotionEvent;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
+import android.Manifest; import android.content.Intent; import android.content.pm.PackageManager; import android.net.Uri; import android.os.Build; import android.os.Bundle; import android.os.Environment; import android.provider.Settings; import android.view.MotionEvent; import android.view.View; import android.widget.Button; import android.widget.LinearLayout; import android.widget.TextView; import android.widget.Toast;
 
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.series.DataPoint; 
-import com.jjoe64.graphview.series.LineGraphSeries;
-import java.io.BufferedWriter; 
-import java.io.File; 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import androidx.activity.EdgeToEdge; import androidx.appcompat.app.AppCompatActivity; import androidx.core.app.ActivityCompat; import androidx.recyclerview.widget.GridLayoutManager;
+
+import com.jjoe64.graphview.GraphView; import com.jjoe64.graphview.series.DataPoint; import com.jjoe64.graphview.series.LineGraphSeries;
+
+import java.io.BufferedWriter; import java.io.File; import java.io.FileWriter; import java.io.IOException; import java.text.SimpleDateFormat; import java.util.ArrayList; import java.util.Date; import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements android.hardware.SensorEventListener {
 
@@ -69,6 +48,21 @@ protected void onCreate(Bundle savedInstanceState) {
     Button startCsvButton = findViewById(R.id.startCsvButton);
     Button stopCsvButton = findViewById(R.id.stopCsvButton);
     Button deleteCsvButton = findViewById(R.id.deleteCsvButton);
+
+    LinearLayout rootLayout = findViewById(R.id.rootLayout);
+    rootLayout.setOnTouchListener((v, event) -> {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                isTouching = true;
+                shouldInsertBlank = true;
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                isTouching = false;
+                break;
+        }
+        return true;
+    });
 
     recyclerView = findViewById(R.id.recyclerView);
     recyclerView.setLayoutManager(new GridLayoutManager(this, grid_size));
@@ -163,21 +157,6 @@ protected void onCreate(Bundle savedInstanceState) {
             Toast.makeText(this, "삭제할 파일 없음", Toast.LENGTH_SHORT).show();
         }
     });
-}
-
-@Override
-public boolean onTouchEvent(MotionEvent event) {
-    switch (event.getAction()) {
-        case MotionEvent.ACTION_DOWN:
-            isTouching = true;
-            shouldInsertBlank = true;
-            break;
-        case MotionEvent.ACTION_UP:
-        case MotionEvent.ACTION_CANCEL:
-            isTouching = false;
-            break;
-    }
-    return super.onTouchEvent(event);
 }
 
 @Override
