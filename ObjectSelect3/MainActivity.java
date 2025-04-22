@@ -1,6 +1,6 @@
 package com.example.objectselect3;
 
-import android.Manifest; import android.content.Intent; import android.content.pm.PackageManager; import android.net.Uri; import android.os.Build; import android.os.Bundle; import android.os.Environment; import android.provider.Settings; import android.view.MotionEvent; import android.widget.Button; import android.widget.TextView; import android.widget.Toast;
+import android.Manifest; import android.content.Intent; import android.content.pm.PackageManager; import android.net.Uri; import android.os.Build; import android.os.Bundle; import android.os.Environment; import android.provider.Settings; import android.util.Log; import android.view.MotionEvent; import android.widget.Button; import android.widget.TextView; import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge; import androidx.appcompat.app.AppCompatActivity; import androidx.core.app.ActivityCompat; import androidx.recyclerview.widget.GridLayoutManager;
 
@@ -24,7 +24,6 @@ private static final int grid_size = 20;
 private BufferedWriter csvWriter;
 private File csvFile;
 private boolean isCsvRecording = false;
-private boolean isTouchActive = false;
 
 private long lastGyroTimestamp = -1;
 private long lastAccelTimestamp = -1;
@@ -36,6 +35,7 @@ private static final long TOUCH_PRE_MS = 100;
 private static final long TOUCH_POST_MS = 100;
 
 private final LinkedList<String> sensorDataBuffer = new LinkedList<>();
+private boolean isTouchActive = false;
 private long touchStartTime = 0;
 private long touchEndTime = 0;
 
@@ -44,6 +44,8 @@ protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     EdgeToEdge.enable(this);
     setContentView(R.layout.activity_main);
+
+    Log.d("jit_test", "onCreate called");
 
     checkStoragePermission();
 
@@ -74,6 +76,7 @@ protected void onCreate(Bundle savedInstanceState) {
     }
 
     startCsvButton.setOnClickListener(v -> {
+        Log.d("jit_test", "Start CSV button clicked");
         if (!isCsvRecording) {
             try {
                 String fileName = "sensor_data_" + System.currentTimeMillis() + ".csv";
@@ -83,15 +86,16 @@ protected void onCreate(Bundle savedInstanceState) {
                 csvWriter = new BufferedWriter(new FileWriter(csvFile));
                 csvWriter.write("Timestamp,TimeString,SensorType,X,Y,Z,Interval(ms)\n");
                 isCsvRecording = true;
-                Toast.makeText(this, "CSV 저장 준비됨 (터치 시 기록)", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "CSV 저장 준비됨 (터치 시 저장)", Toast.LENGTH_SHORT).show();
+                Log.d("jit_test", "CSV writer initialized");
             } catch (IOException e) {
                 e.printStackTrace();
-                Toast.makeText(this, "파일 생성 실패", Toast.LENGTH_SHORT).show();
             }
         }
     });
 
     stopCsvButton.setOnClickListener(v -> {
+        Log.d("jit_test", "Stop CSV button clicked");
         if (isCsvRecording && csvWriter != null) {
             try {
                 csvWriter.close();
@@ -105,6 +109,7 @@ protected void onCreate(Bundle savedInstanceState) {
     });
 
     deleteCsvButton.setOnClickListener(v -> {
+        Log.d("jit_test", "Delete CSV button clicked");
         if (csvFile != null && csvFile.exists()) {
             boolean deleted = csvFile.delete();
             Toast.makeText(this, deleted ? "CSV 삭제됨" : "삭제 실패", Toast.LENGTH_SHORT).show();
@@ -123,6 +128,7 @@ protected void onCreate(Bundle savedInstanceState) {
 public boolean dispatchTouchEvent(MotionEvent event) {
     switch (event.getAction()) {
         case MotionEvent.ACTION_DOWN:
+            Log.d("jit_test", "Touch DOWN event");
             if (isCsvRecording) {
                 isTouchActive = true;
                 touchStartTime = System.currentTimeMillis();
@@ -130,30 +136,32 @@ public boolean dispatchTouchEvent(MotionEvent event) {
             break;
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_CANCEL:
+            Log.d("jit_test", "Touch UP/CANCEL event");
             if (isCsvRecording && isTouchActive) {
                 touchEndTime = System.currentTimeMillis();
                 isTouchActive = false;
-                flushTouchSegmentToCsv();
+                flushTouchBufferToCsv();
             }
             break;
     }
     return super.dispatchTouchEvent(event);
 }
 
-private void flushTouchSegmentToCsv() {
-    long startWindow = touchStartTime - TOUCH_PRE_MS;
-    long endWindow = touchEndTime + TOUCH_POST_MS;
+private void flushTouchBufferToCsv() {
+    long windowStart = touchStartTime - TOUCH_PRE_MS;
+    long windowEnd = touchEndTime + TOUCH_POST_MS;
+    Log.d("jit_test", "Flushing buffer to CSV: " + windowStart + " ~ " + windowEnd);
     try {
         for (String line : sensorDataBuffer) {
             String[] parts = line.split(",", 2);
             if (parts.length >= 2) {
                 long ts = Long.parseLong(parts[0]);
-                if (ts >= startWindow && ts <= endWindow) {
+                if (ts >= windowStart && ts <= windowEnd) {
                     csvWriter.write(line);
                 }
             }
         }
-        csvWriter.write("\n"); // 구간 구분용 줄바꿈
+        csvWriter.write("\n");
         csvWriter.flush();
     } catch (IOException e) {
         e.printStackTrace();
@@ -161,23 +169,12 @@ private void flushTouchSegmentToCsv() {
 }
 
 @Override
-protected void onResume() {
-    super.onResume();
-    if (sensorManager != null) {
-        if (gyroscope != null) {
-            sensorManager.registerListener(this, gyroscope, android.hardware.SensorManager.SENSOR_DELAY_UI);
-        }
-        if (accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer, android.hardware.SensorManager.SENSOR_DELAY_UI);
-        }
-    }
-}
-
-@Override
 public void onSensorChanged(android.hardware.SensorEvent event) {
     runOnUiThread(() -> {
-        graphXIndex++;
         long timestamp = System.currentTimeMillis();
+        Log.d("jit_test", "Sensor event at: " + timestamp);
+
+        graphXIndex++;
         String timeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(timestamp));
         String line = "";
         long interval = 0;
@@ -229,11 +226,14 @@ public void onSensorChanged(android.hardware.SensorEvent event) {
 }
 
 @Override
-public void onAccuracyChanged(android.hardware.Sensor sensor, int accuracy) {}
+public void onAccuracyChanged(android.hardware.Sensor sensor, int accuracy) {
+    Log.d("jit_test", "Accuracy changed for sensor: " + sensor.getType());
+}
 
 @Override
 protected void onDestroy() {
     super.onDestroy();
+    Log.d("jit_test", "onDestroy called");
     if (csvWriter != null) {
         try {
             csvWriter.close();
@@ -244,6 +244,7 @@ protected void onDestroy() {
 }
 
 private void checkStoragePermission() {
+    Log.d("jit_test", "Checking storage permission");
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         if (!Environment.isExternalStorageManager()) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
