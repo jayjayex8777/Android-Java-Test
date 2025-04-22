@@ -1,88 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:id="@+id/rootLayout"
+    <!-- 콘텐츠 영역 전체 감싸는 ScrollView -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="8dp">
+        android:layout_height="match_parent">
 
-        <!-- 2D 스크롤 영역 -->
-        <com.example.objectselect3.CustomHorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <com.example.objectselect3.OrientationAwareRecyclerView
-                android:id="@+id/recyclerView"
-                android:layout_width="wrap_content"
-                android:layout_height="300dp" />
-        </com.example.objectselect3.CustomHorizontalScrollView>
-
-        <!-- 자이로 센서 텍스트 -->
-        <TextView
-            android:id="@+id/gyroTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:paddingVertical="4dp"
-            android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00"
-            android:textSize="14sp"/>
-
-        <!-- 자이로 그래프 -->
-        <com.jjoe64.graphview.GraphView
-            android:id="@+id/gyroGraph"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:layout_marginTop="8dp"/>
-
-        <!-- 가속도 센서 텍스트 -->
-        <TextView
-            android:id="@+id/accelTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:paddingVertical="4dp"
-            android:text="Accel X: +00.00, Y: +00.00, Z: +00.00"
-            android:textSize="14sp"/>
-
-        <!-- 가속도 그래프 -->
-        <com.jjoe64.graphview.GraphView
-            android:id="@+id/accelGraph"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:layout_marginTop="8dp"/>
-
-        <!-- CSV 제어 버튼 영역 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp">
+            android:orientation="vertical"
+            android:padding="8dp">
 
-            <Button
-                android:id="@+id/startCsvButton"
+            <!-- CSV 저장 시간 조절 영역 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="8dp">
+
+                <EditText
+                    android:id="@+id/preDurationInput"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="터치 전(ms)"
+                    android:inputType="number"
+                    android:text="100"
+                    android:layout_marginEnd="8dp"
+                    android:ems="5"/>
+
+                <EditText
+                    android:id="@+id/postDurationInput"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="터치 후(ms)"
+                    android:inputType="number"
+                    android:text="100"
+                    android:ems="5"/>
+            </LinearLayout>
+
+            <!-- 2D 스크롤 영역 -->
+            <com.example.objectselect3.CustomHorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <com.example.objectselect3.OrientationAwareRecyclerView
+                    android:id="@+id/recyclerView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="300dp" />
+            </com.example.objectselect3.CustomHorizontalScrollView>
+
+            <!-- 자이로 센서 텍스트 -->
+            <TextView
+                android:id="@+id/gyroTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CSV 저장 시작"
-                android:layout_marginEnd="8dp"/>
+                android:layout_marginTop="8dp"
+                android:text="Yaw: +00.00, Pitch: +00.00, Roll: +00.00"
+                android:textSize="14sp"/>
 
-            <Button
-                android:id="@+id/stopCsvButton"
+            <!-- 자이로 그래프 -->
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/gyroGraph"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_marginTop="8dp"/>
+
+            <!-- 가속도 센서 텍스트 -->
+            <TextView
+                android:id="@+id/accelTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CSV 저장 중지"
-                android:layout_marginEnd="8dp"/>
+                android:layout_marginTop="8dp"
+                android:text="Accel X: +00.00, Y: +00.00, Z: +00.00"
+                android:textSize="14sp"/>
 
-            <Button
-                android:id="@+id/deleteCsvButton"
-                android:layout_width="wrap_content"
+            <!-- 가속도 그래프 -->
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/accelGraph"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_marginTop="8dp"/>
+
+            <!-- CSV 제어 버튼 영역 -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="CSV 삭제"/>
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/startCsvButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CSV 저장 시작"
+                    android:layout_marginEnd="8dp"/>
+
+                <Button
+                    android:id="@+id/stopCsvButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CSV 저장 중지"
+                    android:layout_marginEnd="8dp"/>
+
+                <Button
+                    android:id="@+id/deleteCsvButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CSV 삭제"/>
+            </LinearLayout>
+
         </LinearLayout>
+    </ScrollView>
 
-    </LinearLayout>
-</ScrollView>
+    <!-- 터치 상태 시각 표시 오버레이 -->
+    <View
+        android:id="@+id/touchOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#00FFFFFF"
+        android:visibility="gone"
+        android:elevation="10dp" />
+
+</FrameLayout>
