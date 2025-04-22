@@ -1,4 +1,4 @@
-package com.example.objectselect3;
+*package com.example.objectselect3;
 
 import android.Manifest; import android.content.Intent; import android.content.pm.PackageManager; import android.net.Uri; import android.os.Build; import android.os.Bundle; import android.os.Environment; import android.provider.Settings; import android.view.MotionEvent; import android.widget.Button; import android.widget.TextView; import android.widget.Toast;
 
@@ -32,8 +32,8 @@ private static final int MARGIN_TIME = 10;
 private float[][] gyroQueue = new float[MARGIN_TIME][3];
 private long[][] gyroTimeQueue = new long[MARGIN_TIME][2];
 
-private float[][] accelQueue = new float[MARGINT_TIME][3];
-private long[][] accelTimeQueue = new long[MARGINT_TIME][2];
+private float[][] accelQueue = new float[MARGIN_TIME][3];
+private long[][] accelTimeQueue = new long[MARGIN_TIME][2];
 
 private int gIndex;
 private int aIndex;
@@ -176,10 +176,10 @@ protected void onResume() {
     super.onResume();
     if (sensorManager != null) {
         if (gyroscope != null) {
-            sensorManager.registerListener(this, gyroscope, android.hardware.SensorManager.SENSOR_DELAY_UI);
+            sensorManager.registerListener(this, gyroscope, android.hardware.SensorManager.SENSOR_DELAY_GAME);
         }
         if (accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer, android.hardware.SensorManager.SENSOR_DELAY_UI);
+            sensorManager.registerListener(this, accelerometer, android.hardware.SensorManager.SENSOR_DELAY_GAME);
         }
     }
 }
@@ -216,7 +216,7 @@ public void onSensorChanged(android.hardware.SensorEvent event) {
             float roll = gyroQueue[gIndex][2];
             timestamp = gyroTimeQueue[gIndex][0];
             interval = gyroTimeQueue[gIndex][1];
-            String timeString = new SimpleDataFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(timestamp));
+            String timeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(timestamp));
 
             gIndex = nextIndex;      
 
