@@ -1,6 +1,6 @@
 package com.example.objectselect3;
 
-import android.Manifest; import android.content.Intent; import android.content.pm.PackageManager; import android.graphics.Color; import android.net.Uri; import android.os.Build; import android.os.Bundle; import android.os.Environment; import android.provider.Settings; import android.view.MotionEvent; import android.view.View; import android.widget.Button; import android.widget.EditText; import android.widget.TextView; import android.widget.Toast;
+import android.Manifest; import android.content.Intent; import android.content.pm.PackageManager; import android.net.Uri; import android.os.Build; import android.os.Bundle; import android.os.Environment; import android.provider.Settings; import android.view.MotionEvent; import android.widget.Button; import android.widget.TextView; import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge; import androidx.appcompat.app.AppCompatActivity; import androidx.core.app.ActivityCompat; import androidx.recyclerview.widget.GridLayoutManager;
 
@@ -24,34 +24,20 @@ private static final int grid_size = 20;
 private BufferedWriter csvWriter;
 private File csvFile;
 private boolean isCsvRecording = false;
-private boolean isTouching = false;
-private boolean shouldInsertBlank = false;
+private boolean isTouchActive = false;
 
 private long lastGyroTimestamp = -1;
 private long lastAccelTimestamp = -1;
 
 private static final int REQUEST_MANAGE_STORAGE = 1001;
 
-private final LinkedList<SensorData> sensorDataBuffer = new LinkedList<>();
-private long BUFFER_DURATION_MS = 1500;
-private long touchPreDurationMs = 100;
-private long touchPostDurationMs = 100;
-private long postTouchEndTime = 0;
+private static final long BUFFER_DURATION_MS = 1500;
+private static final long TOUCH_PRE_MS = 100;
+private static final long TOUCH_POST_MS = 100;
 
-private View touchOverlay;
-private EditText preDurationInput, postDurationInput;
-
-private static class SensorData {
-    long timestamp;
-    String line;
-    boolean isTouchStart = false;
-    boolean isTouchEnd = false;
-
-    SensorData(long timestamp, String line) {
-        this.timestamp = timestamp;
-        this.line = line;
-    }
-}
+private final LinkedList<String> sensorDataBuffer = new LinkedList<>();
+private long touchStartTime = 0;
+private long touchEndTime = 0;
 
 @Override
 protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +55,6 @@ protected void onCreate(Bundle savedInstanceState) {
     Button startCsvButton = findViewById(R.id.startCsvButton);
     Button stopCsvButton = findViewById(R.id.stopCsvButton);
     Button deleteCsvButton = findViewById(R.id.deleteCsvButton);
-    preDurationInput = findViewById(R.id.preDurationInput);
-    postDurationInput = findViewById(R.id.postDurationInput);
-    touchOverlay = findViewById(R.id.touchOverlay);
 
     recyclerView = findViewById(R.id.recyclerView);
     recyclerView.setLayoutManager(new GridLayoutManager(this, grid_size));
@@ -90,17 +73,7 @@ protected void onCreate(Bundle savedInstanceState) {
         gyroscope = sensorManager.getDefaultSensor(android.hardware.Sensor.TYPE_GYROSCOPE);
     }
 
-    // 그래프 초기화 (생략 - 기존 그대로 유지)
-
     startCsvButton.setOnClickListener(v -> {
-        try {
-            touchPreDurationMs = Long.parseLong(preDurationInput.getText().toString());
-            touchPostDurationMs = Long.parseLong(postDurationInput.getText().toString());
-        } catch (Exception e) {
-            touchPreDurationMs = 100;
-            touchPostDurationMs = 100;
-        }
-
         if (!isCsvRecording) {
             try {
                 String fileName = "sensor_data_" + System.currentTimeMillis() + ".csv";
@@ -148,35 +121,56 @@ protected void onCreate(Bundle savedInstanceState) {
 
 @Override
 public boolean dispatchTouchEvent(MotionEvent event) {
-    long now = System.currentTimeMillis();
     switch (event.getAction()) {
         case MotionEvent.ACTION_DOWN:
-            isTouching = true;
-            shouldInsertBlank = true;
-            touchOverlay.setBackgroundColor(Color.parseColor("#66FF0000"));
-            touchOverlay.setVisibility(View.VISIBLE);
-            if (csvWriter != null) {
-                try {
-                    for (SensorData data : sensorDataBuffer) {
-                        if (now - data.timestamp <= touchPreDurationMs) {
-                            data.isTouchStart = true;
-                            csvWriter.write("*START*" + data.line);
-                        }
-                    }
-                    csvWriter.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            if (isCsvRecording) {
+                isTouchActive = true;
+                touchStartTime = System.currentTimeMillis();
             }
             break;
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_CANCEL:
-            isTouching = false;
-            postTouchEndTime = now + touchPostDurationMs;
-            touchOverlay.setBackgroundColor(Color.parseColor("#660000FF"));
+            if (isCsvRecording && isTouchActive) {
+                touchEndTime = System.currentTimeMillis();
+                isTouchActive = false;
+                flushTouchSegmentToCsv();
+            }
             break;
     }
     return super.dispatchTouchEvent(event);
+}
+
+private void flushTouchSegmentToCsv() {
+    long startWindow = touchStartTime - TOUCH_PRE_MS;
+    long endWindow = touchEndTime + TOUCH_POST_MS;
+    try {
+        for (String line : sensorDataBuffer) {
+            String[] parts = line.split(",", 2);
+            if (parts.length >= 2) {
+                long ts = Long.parseLong(parts[0]);
+                if (ts >= startWindow && ts <= endWindow) {
+                    csvWriter.write(line);
+                }
+            }
+        }
+        csvWriter.write("\n"); // 구간 구분용 줄바꿈
+        csvWriter.flush();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+@Override
+protected void onResume() {
+    super.onResume();
+    if (sensorManager != null) {
+        if (gyroscope != null) {
+            sensorManager.registerListener(this, gyroscope, android.hardware.SensorManager.SENSOR_DELAY_UI);
+        }
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer, android.hardware.SensorManager.SENSOR_DELAY_UI);
+        }
+    }
 }
 
 @Override
@@ -185,8 +179,8 @@ public void onSensorChanged(android.hardware.SensorEvent event) {
         graphXIndex++;
         long timestamp = System.currentTimeMillis();
         String timeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(timestamp));
-        String line;
-        long interval;
+        String line = "";
+        long interval = 0;
 
         if (event.sensor.getType() == android.hardware.Sensor.TYPE_GYROSCOPE) {
             interval = (lastGyroTimestamp > 0) ? (timestamp - lastGyroTimestamp) : 0;
@@ -201,7 +195,7 @@ public void onSensorChanged(android.hardware.SensorEvent event) {
             gyroRollSeries.appendData(new DataPoint(graphXIndex, roll), true, 100);
             line = String.format("%d,%s,GYROSCOPE,%.4f,%.4f,%.4f,%d\n",
                     timestamp, timeString, yaw, pitch, roll, interval);
-        } else {
+        } else if (event.sensor.getType() == android.hardware.Sensor.TYPE_ACCELEROMETER) {
             interval = (lastAccelTimestamp > 0) ? (timestamp - lastAccelTimestamp) : 0;
             lastAccelTimestamp = timestamp;
 
@@ -216,31 +210,19 @@ public void onSensorChanged(android.hardware.SensorEvent event) {
                     timestamp, timeString, ax, ay, az, interval);
         }
 
-        SensorData sensorData = new SensorData(timestamp, line);
-        sensorDataBuffer.addLast(sensorData);
-        while (!sensorDataBuffer.isEmpty() && timestamp - sensorDataBuffer.getFirst().timestamp > BUFFER_DURATION_MS) {
-            sensorDataBuffer.removeFirst();
-        }
-
-        if (isCsvRecording && csvWriter != null) {
-            boolean saveNow = isTouching || (timestamp <= postTouchEndTime);
-            if (saveNow) {
-                try {
-                    if (shouldInsertBlank) {
-                        csvWriter.write("\n");
-                        shouldInsertBlank = false;
-                    }
-                    if (timestamp == postTouchEndTime) {
-                        csvWriter.write("*END*" + line);
-                    } else {
-                        csvWriter.write(line);
-                    }
-                    csvWriter.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        sensorDataBuffer.addLast(line);
+        while (!sensorDataBuffer.isEmpty()) {
+            String first = sensorDataBuffer.getFirst();
+            String[] parts = first.split(",", 2);
+            if (parts.length >= 2) {
+                long ts = Long.parseLong(parts[0]);
+                if (timestamp - ts > BUFFER_DURATION_MS) {
+                    sensorDataBuffer.removeFirst();
+                } else {
+                    break;
                 }
             } else {
-                touchOverlay.setVisibility(View.GONE);
+                sensorDataBuffer.removeFirst();
             }
         }
     });
