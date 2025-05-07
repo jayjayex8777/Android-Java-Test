@@ -1,75 +1,76 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<?xml version="1.0" encoding="utf-8"?><ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+android:id="@+id/main"
+android:layout_width="match_parent"
+android:layout_height="match_parent">
 
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- 자이로 센서 출력 -->
+    <TextView
+        android:id="@+id/gyroTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Yaw: 0.00, Pitch: 0.00, Roll: 0.00"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 자이로 그래프 -->
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/gyroGraph"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 가속도 센서 출력 -->
+    <TextView
+        android:id="@+id/accelTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="X: 0.00, Y: 0.00, Z: 0.00"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 가속도 그래프 -->
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/accelGraph"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 버튼 영역: 세로 배치 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:gravity="center"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp">
 
-        <!-- 자이로 센서 출력 -->
-        <TextView
-            android:id="@+id/gyroTextView"
-            android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/startCsvButton"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Yaw: 0.00, Pitch: 0.00, Roll: 0.00"
-            android:textSize="16sp"
+            android:text="CSV 저장 시작"
             android:layout_marginBottom="8dp" />
 
-        <!-- 자이로 그래프 -->
-        <com.jjoe64.graphview.GraphView
-            android:id="@+id/gyroGraph"
+        <Button
+            android:id="@+id/stopCsvButton"
             android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- 가속도 센서 출력 -->
-        <TextView
-            android:id="@+id/accelTextView"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="X: 0.00, Y: 0.00, Z: 0.00"
-            android:textSize="16sp"
+            android:text="CSV 저장 중지"
             android:layout_marginBottom="8dp" />
 
-        <!-- 가속도 그래프 -->
-        <com.jjoe64.graphview.GraphView
-            android:id="@+id/accelGraph"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- 버튼 영역 -->
-        <LinearLayout
+        <Button
+            android:id="@+id/deleteCsvButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="16dp">
-
-            <Button
-                android:id="@+id/startCsvButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CSV 저장 시작"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:id="@+id/stopCsvButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CSV 저장 중지"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:id="@+id/deleteCsvButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CSV 삭제" />
-        </LinearLayout>
-
+            android:text="CSV 삭제" />
     </LinearLayout>
+
+</LinearLayout>
+
 </ScrollView>
