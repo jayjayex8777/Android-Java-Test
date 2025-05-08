@@ -28,7 +28,7 @@ private boolean isTouching = false;
 private boolean shouldInsertBlank = false;
 
 private int recordDelay = 0;
-private static final int MARGIN_TIME = 10;
+private static final int MARGIN_TIME = 3;
 private float[][] gyroQueue = new float[MARGIN_TIME][3];
 private long[][] gyroTimeQueue = new long[MARGIN_TIME][2];
 
@@ -164,7 +164,7 @@ public boolean dispatchTouchEvent(MotionEvent event) {
             break;
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_CANCEL:
-            recordDelay = MARGIN_TIME;
+            recordDelay = MARGIN_TIME*4;
             isTouching = false;
             break;
     }
@@ -204,18 +204,18 @@ public void onSensorChanged(android.hardware.SensorEvent event) {
             */
             int nextIndex = (gIndex +1) % MARGIN_TIME;
 
-            gyroQueue[nextIndex][0] = event.values[0];
-            gyroQueue[nextIndex][1] = event.values[1];
-            gyroQueue[nextIndex][2] = event.values[2];
-            gyroTimeQueue[nextIndex][0] = timestamp;
-            gyroTimeQueue[nextIndex][1] = (lastGyroTimestamp > 0) ? (timestamp - lastGyroTimestamp) : 0;
+            gyroQueue[gIndex][0] = event.values[0];
+            gyroQueue[gIndex][1] = event.values[1];
+            gyroQueue[gIndex][2] = event.values[2];
+            gyroTimeQueue[gIndex][0] = timestamp;
+            gyroTimeQueue[gIndex][1] = (lastGyroTimestamp > 0) ? (timestamp - lastGyroTimestamp) : 0;
             lastGyroTimestamp = timestamp;
 
-            float yaw = gyroQueue[gIndex][0];
-            float pitch = gyroQueue[gIndex][1];
-            float roll = gyroQueue[gIndex][2];
-            timestamp = gyroTimeQueue[gIndex][0];
-            interval = gyroTimeQueue[gIndex][1];
+            float yaw = gyroQueue[nextIndex][0];
+            float pitch = gyroQueue[nextIndex][1];
+            float roll = gyroQueue[nextIndex][2];
+            timestamp = gyroTimeQueue[nextIndex][0];
+            interval = gyroTimeQueue[nextIndex][1];
             String timeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(timestamp));
 
             gIndex = nextIndex;      
@@ -238,18 +238,18 @@ public void onSensorChanged(android.hardware.SensorEvent event) {
             
             int nextIndex = (aIndex + 1) % MARGIN_TIME;
             
-            accelQueue[nextIndex][0] = event.values[0];
-            accelQueue[nextIndex][1] = event.values[1];
-            accelQueue[nextIndex][2] = event.values[2];
-            accelTimeQueue[nextIndex][0] = timestamp;
-            accelTimeQueue[nextIndex][1] = (lastAccelTimestamp > 0) ? (timestamp - lastAccelTimestamp) : 0;
+            accelQueue[aIndex][0] = event.values[0];
+            accelQueue[aIndex][1] = event.values[1];
+            accelQueue[aIndex][2] = event.values[2];
+            accelTimeQueue[aIndex][0] = timestamp;
+            accelTimeQueue[aIndex][1] = (lastAccelTimestamp > 0) ? (timestamp - lastAccelTimestamp) : 0;
             lastAccelTimestamp = timestamp;
 
-            float ax = accelQueue[aIndex][0];
-            float ay = accelQueue[aIndex][1];
-            float az = accelQueue[aIndex][2];
-            timestamp = accelTimeQueue[aIndex][0];
-            interval = accelTimeQueue[aIndex][1];
+            float ax = accelQueue[nextIndex][0];
+            float ay = accelQueue[nextIndex][1];
+            float az = accelQueue[nextIndex][2];
+            timestamp = accelTimeQueue[nextIndex][0];
+            interval = accelTimeQueue[nextIndex][1];
             String timeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(timestamp));
 
             aIndex = nextIndex;
