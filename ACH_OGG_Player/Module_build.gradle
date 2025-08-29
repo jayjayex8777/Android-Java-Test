@@ -1,0 +1,37 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.example.achoggmusicplayer'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.achoggmusicplayer"
+        minSdk 30
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        // SAF로 파일 열기
+        resourceConfigurations += ['en', 'ko']
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // AndroidX EdgeToEdge 사용을 위해 최신 activity 의존성 권장
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.activity:activity:1.9.2'
+    implementation 'androidx.core:core-ktx:1.13.1' // (자바 프로젝트에도 사용 가능)
+}
