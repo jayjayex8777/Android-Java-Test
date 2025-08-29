@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="com.example.achoggmusicplayer"
     xmlns:android="http://schemas.android.com/apk/res/android">
-
+    
+    <uses-permission android:name="android.permission.VIBRATE" />
     <!-- SAF를 사용하므로 저장소 퍼미션 불필요. 다만 persistable URI 권한을 위해 아래 flag 필요 -->
     <application
         android:allowBackup="true"
