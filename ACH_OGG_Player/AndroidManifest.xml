@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="com.example.achoggmusicplayer"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- SAF를 사용하므로 저장소 퍼미션 불필요. 다만 persistable URI 권한을 위해 아래 flag 필요 -->
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ACHOGGPlayer">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+            <!-- OpenDocument 결과 영구 권한 유지를 위한 FLAG_GRANT_PERSISTABLE_URI_PERMISSION -->
+            <intent-filter>
+                <action android:name="android.intent.action.OPEN_DOCUMENT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
