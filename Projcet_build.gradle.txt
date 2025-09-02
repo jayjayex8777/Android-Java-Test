@@ -1,0 +1,4 @@
+plugins {
+    // 자바 프로젝트라 Kotlin 플러그인은 불필요
+    id("com.android.application") version "8.6.0" apply false
+}
