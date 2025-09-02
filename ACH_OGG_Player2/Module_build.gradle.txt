@@ -1,0 +1,39 @@
+plugins {
+    id("com.android.application")
+}
+
+android {
+    namespace = "com.example.achoggmusicplayer"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.example.achoggmusicplayer"
+        minSdk = 30
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+
+        // 리소스 로딩 최적화(영문/국문만 포함)
+        resourceConfigurations += listOf("en", "ko")
+    }
+
+    buildFeatures {
+        viewBinding = true
+    }
+
+    // 자바 17
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // (선택) 릴리즈 설정을 나중에 추가 가능
+    // buildTypes { getByName("release") { isMinifyEnabled = false } }
+}
+
+dependencies {
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.activity:activity:1.9.2")
+    implementation("androidx.core:core-ktx:1.13.1")
+}
