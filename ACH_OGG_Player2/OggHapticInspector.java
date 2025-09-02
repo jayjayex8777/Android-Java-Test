@@ -11,6 +11,12 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
+/**
+ * 간단한 OGG 메타/포맷 검사기.
+ * - duration/mime, 채널 수, 샘플레이트, ANDROID_HAPTIC 태그 존재 여부를 추정.
+ * - 현 단계에서는 시스템 ACH 동기화를 가정해 "햅틱 경과시간 = 오디오 경과시간"으로 표시.
+ * - 추후 실제 ACH 트랙 타이밍/세그먼트 파싱을 추가하는 경우, 이 클래스에 메서드를 확장하면 됨.
+ */
 public class OggHapticInspector {
 
     public static class Result {
@@ -22,8 +28,7 @@ public class OggHapticInspector {
         public String notes;
 
         public boolean hasHaptic() {
-            // 경험상 3채널 이상이면 Haptic 포함 가능성이 높음.
-            // 또는 ANDROID_HAPTIC 태그가 있으면 '있음'으로 간주.
+            // 경험상 3채널 이상이면 Haptic 포함 가능성 ↑, 또는 ANDROID_HAPTIC 태그가 있으면 '있음'으로 간주.
             return hasHapticTag || channelCount >= 3;
         }
     }
@@ -40,7 +45,7 @@ public class OggHapticInspector {
         try { r.durationMs = dur == null ? -1 : Long.parseLong(dur); } catch (Throwable ignore) {}
         r.mime = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE);
 
-        // 2) MediaExtractor로 audio track 포맷 파기 (채널/샘플레이트)
+        // 2) MediaExtractor로 audio track 포맷(채널/샘플레이트)
         MediaExtractor ex = new MediaExtractor();
         ex.setDataSource(ctx, uri, null);
         int trackCount = ex.getTrackCount();
@@ -54,21 +59,20 @@ public class OggHapticInspector {
                 if (fmt.containsKey(MediaFormat.KEY_SAMPLE_RATE)) {
                     r.sampleRate = fmt.getInteger(MediaFormat.KEY_SAMPLE_RATE);
                 }
-                // 첫 audio 트랙만 채택
-                break;
+                break; // 첫 audio 트랙만 채택
             }
         }
         ex.release();
 
-        // 3) 간단 스캔: 파일에 "ANDROID_HAPTIC" 문자열이 있는지 확인(OGG Vorbis comment 대비)
+        // 3) 간단 스캔: 파일에 "ANDROID_HAPTIC" 문자열이 있는지 확인(OGG Vorbis comment 등)
         //    너무 큰 파일 방지 위해 최대 1MB만 검사
         r.hasHapticTag = scanForString(ctx, uri, "ANDROID_HAPTIC", 1024 * 1024);
 
         // 4) 메모
         if (r.channelCount >= 3 && !r.hasHapticTag) {
-            r.notes = "3채널 이상이지만 ANDROID_HAPTIC 문자열은 발견되지 않음(디바이스에 따라 정상 동작 가능).";
+            r.notes = "3채널 이상이지만 ANDROID_HAPTIC 문자열은 발견되지 않음(디바이스/인코딩에 따라 정상 동작 가능).";
         } else if (r.channelCount <= 2 && r.hasHapticTag) {
-            r.notes = "태그는 있으나 채널 수는 1~2ch로 보고됨(인코딩/Extractor 차이 가능).";
+            r.notes = "태그는 있으나 채널 수는 1~2ch로 보고됨(인코더/Extractor 차이 가능).";
         }
 
         return r;
