@@ -1,3 +1,8 @@
 Android resource linking failed
 com.example.achoggmusicplayer.app-mergeDebugResources-35:/layout/activity_main.xml:15: error: attribute show_controller (aka com.example.achoggmusicplayer:show_controller) not found.
 error: failed linking file resources.
+
+
+ERROR: AAPT: error: resource style/Theme.Material3.DayNight.NoActionBar (aka com.example.achoggmusicplayer:style/Theme.Material3.DayNight.NoActionBar) not found.
+error: resource style/Theme.Material3.DayNight.NoActionBar (aka com.example.achoggmusicplayer:style/Theme.Material3.DayNight.NoActionBar) not found.
+error: failed linking references.
