@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">ACH OGG Music Player</string>
+
+    <string name="btn_pick">파일 선택 (OGG)</string>
+    <string name="btn_play">Play</string>
+    <string name="btn_pause">Pause</string>
+    <string name="btn_stop">Stop</string>
+
+    <string name="label_audio_time">Audio</string>
+    <string name="label_haptic_time">Haptic (synced)</string>
+    <string name="time_sep"> / </string>
+    <string name="seekbar_desc">Timeline</string>
+
+    <string name="hint_path">선택된 파일 경로가 여기 표시됩니다.</string>
+    <string name="hint_info">파일 메타데이터 정보가 여기에 표시됩니다.</string>
 </resources>
