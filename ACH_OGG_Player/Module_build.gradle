@@ -1,5 +1,7 @@
 plugins {
     id("com.android.application")
+    // Java 프로젝트만 사용하시면 kotlin-android 플러그인은 불필요합니다.
+    // id("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -8,36 +10,44 @@ android {
 
     defaultConfig {
         applicationId = "com.example.achoggmusicplayer"
-        minSdk = 30
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
-        // 리소스 로딩 최적화(영문/국문만 포함)
-        resourceConfigurations += listOf("en", "ko")
     }
 
+    // viewBinding을 쓰지 않으시면 false 그대로 두셔도 됩니다.
     buildFeatures {
-        viewBinding = true
+        viewBinding = false
     }
 
-    // 자바 17
+    // 자바 소스/타깃 버전
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // (선택) 릴리즈 설정을 나중에 추가 가능
-    // buildTypes { getByName("release") { isMinifyEnabled = false } }
+    // (옵션) 릴리스 빌드 설정 필요 시 추가
+    // buildTypes {
+    //     release {
+    //         isMinifyEnabled = false
+    //         proguardFiles(
+    //             getDefaultProguardFile("proguard-android-optimize.txt"),
+    //             "proguard-rules.pro"
+    //         )
+    //     }
+    // }
 }
 
 dependencies {
+    // ExoPlayer 2.x (UI 포함) — PlayerView 인플레이트 위해 필수
+    implementation("com.google.android.exoplayer:exoplayer-core:2.19.1")
+    implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
+
+    // AppCompat (Manifest에서 AppCompat 테마 사용 중)
     implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.activity:activity:1.9.2")
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.media3:media3-exoplayer:1.8.0")
-    implementation("androidx.media3:media3-ui:1.8.0")
-    implementation("androidx.media3:media3-extractor:1.8.0")
-    implementation("com.google.android.exoplayer:exoplayer:2.19.1")
+    implementation("androidx.annotation:annotation:1.8.0")
+
+    // (선택) 머티리얼 컴포넌트 사용 시
+    // implementation("com.google.android.material:material:1.12.0")
 }
