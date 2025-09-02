@@ -1,29 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.example.achoggmusicplayer"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-    
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- SAF를 사용하므로 저장소 퍼미션 불필요. 다만 persistable URI 권한을 위해 아래 flag 필요 -->
-    <application
-        android:allowBackup="true"
-        android:label="@string/app_name"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.ACHOGGPlayer">
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-            <!-- OpenDocument 결과 영구 권한 유지를 위한 FLAG_GRANT_PERSISTABLE_URI_PERMISSION -->
-            <intent-filter>
-                <action android:name="android.intent.action.OPEN_DOCUMENT"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
+    <!-- Media3 PlayerView 사용 시 -->
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/playerView"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        app:show_controller="true" />
+
+    <TextView
+        android:id="@+id/tvTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="--:--.-- / --:--.--"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btnPick"
+        android:layout_marginTop="16dp"
+        android:text="Open OGG (SAF)"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/btnHaptic"
+        android:layout_marginTop="8dp"
+        android:text="Play Haptic (Meta)"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</LinearLayout>
