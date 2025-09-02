@@ -1,38 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:gravity="center_horizontal"
-    android:padding="16dp"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<manifest package="com.example.achoggmusicplayer"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Media3 PlayerView: 커스텀 속성 제거 (코드에서 컨트롤러 ON) -->
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/playerView"
-        android:layout_width="match_parent"
-        android:layout_height="220dp" />
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-    <!-- 시간 표시: mm:ss.SS (10ms 단위), 예: 02:35.47 / 04:10.00 -->
-    <TextView
-        android:id="@+id/tvTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="--:--.-- / --:--.--"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
 
-    <Button
-        android:id="@+id/btnPick"
-        android:layout_marginTop="16dp"
-        android:text="Open OGG (SAF)"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+    </application>
 
-    <Button
-        android:id="@+id/btnHaptic"
-        android:layout_marginTop="8dp"
-        android:text="Play Haptic (Meta)"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-</LinearLayout>
+    <!-- Haptic 진동 사용 -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+</manifest>
