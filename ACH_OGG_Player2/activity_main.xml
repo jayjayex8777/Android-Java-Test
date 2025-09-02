@@ -14,9 +14,9 @@
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ACH OGG Music Player"
+            android:text="ACH OGG Player (Audio & Haptic: Independent)"
             android:textStyle="bold"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:paddingBottom="8dp"/>
 
         <Button
