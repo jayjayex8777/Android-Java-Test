@@ -27,7 +27,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // (선택) 릴리즈 설정을 나중에 추가 가능
+    // 필요 시 buildTypes 추가 가능
     // buildTypes { getByName("release") { isMinifyEnabled = false } }
 }
 
