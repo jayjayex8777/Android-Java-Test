@@ -1,62 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:gravity="center_horizontal"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tvTitle"
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/playerView"
         android:layout_width="match_parent"
+        android:layout_height="220dp"
+        app:use_controller="true" />
+
+    <!-- 시간 표시: "00:00 / 03:42" 형식 -->
+    <TextView
+        android:id="@+id/tvTime"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ACH OGG Music Player"
-        android:textStyle="bold"
-        android:textSize="20sp"
-        android:paddingBottom="8dp"/>
+        android:layout_marginTop="12dp"
+        android:text="--:-- / --:--"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/btnPick"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="파일 선택 (OGG)"/>
+        android:layout_marginTop="16dp"
+        android:text="Open OGG (SAF)"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
-    <TextView
-        android:id="@+id/tvPath"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="선택된 파일 경로가 여기 표시됩니다."
-        android:textSize="12sp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="2">
-
-        <Button
-            android:id="@+id/btnPlay"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Play"/>
-
-        <Button
-            android:id="@+id/btnStop"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Stop"
-            android:layout_marginStart="8dp"/>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/tvInfo"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="파일 메타데이터 정보가 여기에 표시됩니다."
-        android:paddingTop="12dp"/>
+    <Button
+        android:id="@+id/btnHaptic"
+        android:layout_marginTop="8dp"
+        android:text="Play Haptic (Meta)"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 </LinearLayout>
