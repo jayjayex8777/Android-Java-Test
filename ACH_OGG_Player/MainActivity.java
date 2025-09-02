@@ -1,218 +1,167 @@
-package com.example.achoggmusicplayer;
+package com.example.achoggplayer;
 
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.UriPermission;
-import android.media.AudioAttributes;
-import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
-import android.util.Log;
-import android.view.View;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-import java.lang.reflect.Method;
-import java.util.List;
+import androidx.media3.common.AudioAttributes;
+import androidx.media3.common.C;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.Player;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.ui.PlayerView;
+
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "ACHPlayer";
-    private static final String PREFS = "ach_prefs";
-    private static final String KEY_LAST_URI = "last_uri";
+    private PlayerView playerView;
+    private ExoPlayer player;
+    private Uri lastPickedUri;
 
-    private Button btnPick, btnPlay, btnStop;
-    private TextView tvPath, tvInfo;
+    private TextView tvTime;
+    private final Handler uiHandler = new Handler(Looper.getMainLooper());
+    private final long UI_UPDATE_INTERVAL_MS = 10L; // 10ms 단위 업데이트
 
-    private Uri selectedUri = null;
-    private MediaPlayer mediaPlayer = null;
+    private final Runnable timeUpdater = new Runnable() {
+        @Override
+        public void run() {
+            if (player != null) {
+                long pos = Math.max(0, player.getCurrentPosition());
+                long dur = player.getDuration();
+                String left = formatTime(pos);
+                String right = (dur != C.TIME_UNSET && dur > 0) ? formatTime(dur) : "--:--.--";
+                tvTime.setText(left + " / " + right);
 
-    private final ActivityResultLauncher<String[]> pickOggLauncher =
-            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
-                if (uri != null) {
-                    getContentResolver().takePersistableUriPermission(
-                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    );
-                    selectedUri = uri;
-                    tvPath.setText(String.valueOf(uri));
-                    saveLastUri(uri);
-                    showMetadata(uri);
-                }
-            });
+                uiHandler.postDelayed(this, UI_UPDATE_INTERVAL_MS);
+            }
+        }
+    };
+
+    private final ActivityResultLauncher<Intent> openDoc =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                (ActivityResult result) -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            final int flags = (result.getData().getFlags()
+                                    & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
+                            try {
+                                getContentResolver().takePersistableUriPermission(uri, flags);
+                            } catch (SecurityException ignored) {}
+                            lastPickedUri = uri;
+                            playUri(uri);
+                        }
+                    }
+                });
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+        playerView = findViewById(R.id.playerView);
+        tvTime = findViewById(R.id.tvTime);
+
+        player = new ExoPlayer.Builder(this).build();
+        AudioAttributes attrs = new AudioAttributes.Builder()
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .setUsage(C.USAGE_MEDIA)
+                .build();
+        player.setAudioAttributes(attrs, true);
+        playerView.setPlayer(player);
+
+        player.addListener(new Player.Listener() {
+            @Override
+            public void onPlaybackStateChanged(int playbackState) {
+                if (playbackState == Player.STATE_READY) {
+                    long dur = player.getDuration();
+                    String right = (dur != C.TIME_UNSET && dur > 0) ? formatTime(dur) : "--:--.--";
+                    tvTime.setText("00:00.00 / " + right);
+                }
+            }
+
+            @Override
+            public void onMediaItemTransition(@Nullable MediaItem mediaItem, int reason) {
+                tvTime.setText("--:--.-- / --:--.--");
+            }
         });
 
-        btnPick = findViewById(R.id.btnPick);
-        btnPlay = findViewById(R.id.btnPlay);
-        btnStop = findViewById(R.id.btnStop);
-        tvPath = findViewById(R.id.tvPath);
-        tvInfo = findViewById(R.id.tvInfo);
+        Button btnPick = findViewById(R.id.btnPick);
+        btnPick.setOnClickListener(v -> pickOgg());
 
-        btnPick.setOnClickListener(v -> openPicker());
-        btnPlay.setOnClickListener(v -> startPlayback());
-        btnStop.setOnClickListener(v -> stopPlayback());
-
-        restoreLastUriIfPossible();
-    }
-
-    private void openPicker() {
-        // audio/ogg 가 주 MIME 이지만, 일부 기기/앱은 application/ogg 로 노출되므로 둘 다 허용
-        pickOggLauncher.launch(new String[]{"audio/ogg", "application/ogg", "audio/x-ogg"});
-    }
-
-    private void startPlayback() {
-        if (selectedUri == null) {
-            Toast.makeText(this, "먼저 OGG 파일을 선택해 주세요.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        stopPlayback(); // 기존 인스턴스 정리
-        try {
-            mediaPlayer = new MediaPlayer();
-
-            AudioAttributes.Builder ab = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC);
-
-            // ACH: Haptic 채널 음소거 해제 (API 31+). 하위 버전은 리플렉션 시도.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                ab.setHapticChannelsMuted(false);
-            } else {
-                try {
-                    Method m = AudioAttributes.Builder.class
-                            .getMethod("setHapticChannelsMuted", boolean.class);
-                    m.invoke(ab, false); // 있으면 사용
-                } catch (Throwable ignore) {
-                    Log.i(TAG, "setHapticChannelsMuted not available on this API level.");
-                }
+        Button btnHaptic = findViewById(R.id.btnHaptic);
+        btnHaptic.setOnClickListener(v -> {
+            if (lastPickedUri != null) {
+                HapticController.playFromMetadata(this, lastPickedUri);
             }
+        });
+    }
 
-            mediaPlayer.setAudioAttributes(ab.build());
-            mediaPlayer.setDataSource(this, selectedUri);
-            mediaPlayer.setOnPreparedListener(mp -> {
-                mp.start();
-                Toast.makeText(this, "재생 시작", Toast.LENGTH_SHORT).show();
-            });
-            mediaPlayer.setOnCompletionListener(mp ->
-                    Toast.makeText(this, "재생 완료", Toast.LENGTH_SHORT).show()
-            );
-            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                Toast.makeText(this, "재생 오류: " + what + " / " + extra, Toast.LENGTH_LONG).show();
-                return true;
-            });
-            mediaPlayer.prepareAsync();
+    private void pickOgg() {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("audio/ogg");
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        openDoc.launch(i);
+    }
 
-        } catch (Exception e) {
-            Toast.makeText(this, "재생 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            Log.e(TAG, "startPlayback error", e);
+    private void playUri(Uri uri) {
+        MediaItem item = MediaItem.fromUri(uri);
+        player.setMediaItem(item);
+        player.prepare();
+        player.play();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (player != null) {
+            player.setPlayWhenReady(true);
         }
+        uiHandler.removeCallbacks(timeUpdater);
+        uiHandler.postDelayed(timeUpdater, UI_UPDATE_INTERVAL_MS);
     }
 
-    private void stopPlayback() {
-        try {
-            if (mediaPlayer != null) {
-                if (mediaPlayer.isPlaying()) mediaPlayer.stop();
-                mediaPlayer.reset();
-                mediaPlayer.release();
-                mediaPlayer = null;
-                Toast.makeText(this, "정지", Toast.LENGTH_SHORT).show();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "stopPlayback error", e);
+    @Override
+    protected void onStop() {
+        super.onStop();
+        uiHandler.removeCallbacks(timeUpdater);
+        if (player != null) {
+            player.pause();
         }
-    }
-
-    private void showMetadata(Uri uri) {
-        try {
-            OggHapticInspector.Result r = OggHapticInspector.inspect(this, uri);
-
-            String chText;
-            if (r.channelCount <= 0) chText = "Unknown";
-            else if (r.channelCount == 1) chText = "Mono";
-            else if (r.channelCount == 2) chText = "Stereo";
-            else chText = r.channelCount + "ch (3ch 이상: Haptic 포함 가능)";
-
-            String info = ""
-                    + "Container/MIME : " + safe(r.mime) + "\n"
-                    + "Channels       : " + chText + "\n"
-                    + "Haptic Tag     : " + (r.hasHapticTag ? "존재 가능(ANDROID_HAPTIC 발견)" : "미확인") + "\n"
-                    + "Haptic 추정    : " + (r.hasHaptic() ? "있음(추정)" : "없음(추정)") + "\n"
-                    + "Sample Rate    : " + (r.sampleRate > 0 ? r.sampleRate + " Hz" : "Unknown") + "\n"
-                    + "Duration       : " + formatMs(r.durationMs) + "\n"
-                    + (r.notes == null ? "" : ("Notes          : " + r.notes + "\n"));
-
-            tvInfo.setText(info);
-
-        } catch (Exception e) {
-            tvInfo.setText("메타데이터 읽기 실패: " + e.getMessage());
-            Log.e(TAG, "showMetadata error", e);
-        }
-    }
-
-    private String formatMs(long ms) {
-        if (ms <= 0) return "Unknown";
-        long totalSec = ms / 1000;
-        long m = totalSec / 60;
-        long s = totalSec % 60;
-        return String.format("%d:%02d (%d ms)", m, s, ms);
-    }
-
-    private String safe(String s) { return s == null ? "Unknown" : s; }
-
-    private void saveLastUri(Uri uri) {
-        SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
-        sp.edit().putString(KEY_LAST_URI, uri.toString()).apply();
-    }
-
-    private void restoreLastUriIfPossible() {
-        SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
-        String last = sp.getString(KEY_LAST_URI, null);
-        if (last == null) return;
-
-        try {
-            Uri uri = Uri.parse(last);
-            // 여전히 권한이 있는지 확인
-            boolean stillHave = false;
-            List<UriPermission> perms = getContentResolver().getPersistedUriPermissions();
-            for (UriPermission p : perms) {
-                if (p.getUri().equals(uri) && p.isReadPermission()) {
-                    stillHave = true; break;
-                }
-            }
-            if (stillHave) {
-                selectedUri = uri;
-                tvPath.setText(String.valueOf(uri));
-                showMetadata(uri);
-            }
-        } catch (Exception ignore) {}
     }
 
     @Override
     protected void onDestroy() {
+        if (player != null) {
+            player.release();
+            player = null;
+        }
         super.onDestroy();
-        stopPlayback();
+    }
+
+    /** mm:ss.SS (10ms 단위) 포맷 */
+    private String formatTime(long millis) {
+        if (millis < 0) millis = 0;
+        long totalSeconds = millis / 1000;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        long centiseconds = (millis % 1000) / 10; // 10ms 단위 → 00~99
+
+        return String.format(Locale.US, "%02d:%02d.%02d", minutes, seconds, centiseconds);
     }
 }
