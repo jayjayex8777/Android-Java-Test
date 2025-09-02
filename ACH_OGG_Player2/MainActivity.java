@@ -32,7 +32,7 @@ import java.util.Locale;
 /**
  * - OGG 파일 선택/재생(오디오)
  * - 시스템 ACH(오디오 결합 햅틱) 동작 시 오디오 타임라인과 동기 재생
- * - 오디오/햅틱 경과·총시간 실시간 표시
+ * - 오디오/햅틱 경과·총시간을 10ms 단위(hh:mm:ss.cc)로 실시간 표시
  * - SeekBar 시킹(오디오/햅틱 동기 이동), 일시정지/정지
  */
 public class MainActivity extends AppCompatActivity {
@@ -51,12 +51,13 @@ public class MainActivity extends AppCompatActivity {
     // 메타 데이터(오디오 기준)
     private long audioDurationMs = 0L;
 
-    // UI 주기 업데이트용
+    // UI 주기 업데이트용 (10ms 단위 표시에 맞춰 20ms 주기로 갱신)
+    private static final int UI_INTERVAL_MS = 20;
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
     private final Runnable uiTicker = new Runnable() {
         @Override public void run() {
             updateTimesAndSeek();
-            uiHandler.postDelayed(this, 100);
+            uiHandler.postDelayed(this, UI_INTERVAL_MS);
         }
     };
 
@@ -225,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
                     + "Haptic Tag     : " + (r.hasHapticTag ? "존재 가능(ANDROID_HAPTIC 발견)" : "미확인") + "\n"
                     + "Haptic 추정    : " + (r.hasHaptic() ? "있음(추정)" : "없음(추정)") + "\n"
                     + "Sample Rate    : " + (r.sampleRate > 0 ? r.sampleRate + " Hz" : "Unknown") + "\n"
-                    + "Duration       : " + formatMs(r.durationMs) + "\n"
+                    + "Duration       : " + formatMs10(r.durationMs) + "\n"
                     + (r.notes == null ? "" : ("Notes          : " + r.notes + "\n"));
 
             tvInfo.setText(info);
@@ -247,9 +248,9 @@ public class MainActivity extends AppCompatActivity {
         long hDur = aDur;
 
         tvAudioTime.setText(getString(R.string.label_audio_time)
-                + "  " + formatClock(aPos) + getString(R.string.time_sep) + formatClock(aDur));
+                + "  " + formatClock10(aPos) + getString(R.string.time_sep) + formatClock10(aDur));
         tvHapticTime.setText(getString(R.string.label_haptic_time)
-                + "  " + formatClock((int) hPos) + getString(R.string.time_sep) + formatClock((int) hDur));
+                + "  " + formatClock10((int) hPos) + getString(R.string.time_sep) + formatClock10((int) hDur));
 
         if (aDur > 0) {
             int progress = Math.round((aPos / (float) aDur) * seekBar.getMax());
@@ -259,22 +260,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String formatMs(long ms) {
-        if (ms <= 0) return "Unknown";
-        long totalSec = ms / 1000;
-        long m = totalSec / 60;
-        long s = totalSec % 60;
-        return String.format(Locale.US, "%d:%02d (%d ms)", m, s, ms);
-    }
-
-    private String formatClock(int ms) {
+    /** 10ms 단위(HH:MM:SS.cc)로 표시 */
+    private String formatClock10(int ms) {
         if (ms < 0) ms = 0;
         int totalSec = ms / 1000;
         int h = totalSec / 3600;
         int m = (totalSec % 3600) / 60;
         int s = totalSec % 60;
-        if (h > 0) return String.format(Locale.US, "%d:%02d:%02d", h, m, s);
-        return String.format(Locale.US, "%02d:%02d", m, s);
+        int cs = (ms % 1000) / 10; // centiseconds (0~99)
+
+        if (h > 0) return String.format(Locale.US, "%d:%02d:%02d.%02d", h, m, s, cs);
+        return String.format(Locale.US, "%02d:%02d.%02d", m, s, cs);
+    }
+
+    /** 메타 표시용(총 길이 등): mm:ss.cc (ms) */
+    private String formatMs10(long ms) {
+        if (ms <= 0) return "Unknown";
+        int totalSec = (int)(ms / 1000);
+        int m = (totalSec % 3600) / 60;
+        int h = totalSec / 3600;
+        int s = totalSec % 60;
+        int cs = (int)((ms % 1000) / 10);
+        if (h > 0) {
+            return String.format(Locale.US, "%d:%02d:%02d.%02d (%d ms)", h, m, s, cs, ms);
+        } else {
+            return String.format(Locale.US, "%02d:%02d.%02d (%d ms)", m, s, cs, ms);
+        }
     }
 
     private String safe(String s) { return s == null ? "Unknown" : s; }
