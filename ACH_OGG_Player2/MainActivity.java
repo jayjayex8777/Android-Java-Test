@@ -29,22 +29,20 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * - 오디오와 햅틱을 완전히 분리 제어
- *   * 오디오: Play/Pause/Stop + 개별 SeekBar
- *   * 햅틱: Play/Pause/Stop + 개별 SeekBar + 의도적 디싱크(+/-) + 오디오로 재동기화
- * - 두 타임라인 모두 10ms 단위 표기(HH:MM:SS.cc)
+ * 같은 A.ogg에서 "오디오"와 "내장 햅틱 채널(3ch 이상 시 3번째)"을 분리 제어
+ * - Audio: MediaPlayer (시스템 ACH는 음소거로 끔)
+ * - Haptic: OGG에서 직접 추출한 10ms 간격 진폭 파형을 Vibrator로 재생
  */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "ACHPlayer";
     private static final String PREFS = "ach_prefs";
     private static final String KEY_LAST_URI = "last_uri";
-    private static final int UI_INTERVAL_MS = 20; // 10ms 단위 표기에 충분한 UI 갱신 간격
+    private static final int UI_INTERVAL_MS = 20; // 10ms 표기를 위한 충분한 갱신 주기
 
     // UI
     private Button btnPick, btnPlay, btnPause, btnStop;
@@ -60,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     // 햅틱
     private Vibrator vibrator;
     private HapticPlaybackEngine hapticEngine;
-    private OggHapticInspector.HapticTrackInfo hapticInfo; // null일 수 있음(없으면 오디오 길이에 맞춰 0 표시)
+    private OggHapticInspector.HapticTrackInfo hapticInfo; // null 가능
 
     // UI 주기 업데이트용
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
@@ -81,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     tvPath.setText(String.valueOf(uri));
                     saveLastUri(uri);
 
-                    // 파일 분석(오디오 메타 + 햅틱 트랙)
+                    // 파일 분석(오디오 메타 + 햅틱 파형 추출)
                     showMetadataAndPrepare(uri);
                 }
             });
@@ -148,16 +146,14 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "햅틱 트랙이 없습니다.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            // 현재 햅틱 위치에서 재생
             hapticEngine.playFrom(hapticEngine.getCurrentPositionMs());
         });
         btnHapticPause.setOnClickListener(v -> hapticEngine.pause());
         btnHapticStop.setOnClickListener(v -> hapticEngine.stop());
         btnHapticResync.setOnClickListener(v -> {
-            // 오디오 현재 위치로 즉시 동기화
             long aPos = (mediaPlayer != null) ? mediaPlayer.getCurrentPosition() : 0L;
             hapticEngine.seekTo(aPos, true);
-            Toast.makeText(this, "햅틱 타임라인을 오디오에 재동기화", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "햅틱을 오디오 현재 시점으로 재동기화", Toast.LENGTH_SHORT).show();
         });
 
         // 의도적 디싱크(±100ms)
@@ -205,7 +201,10 @@ public class MainActivity extends AppCompatActivity {
             OggHapticInspector.Result r = OggHapticInspector.inspect(this, uri);
             audioDurationMs = (r.durationMs > 0) ? r.durationMs : 0L;
 
-            // 햅틱 트랙 파싱(데모 세그먼트라도 생성)
+            // 햅틱 파형 추출(동기 X, 완전 독립)
+            // 1) 3채널 이상이면 3번째 채널을 햅틱으로 간주해서 10ms RMS → 0~255 진폭 파형 생성
+            // 2) 아니고 ANDROID_HAPTIC 태그만 있으면 간단 펄스(우회)
+            // 3) 둘 다 아니면 null
             hapticInfo = OggHapticInspector.parseAchFromOgg(this, uri);
             if (hapticInfo != null) hapticEngine.setTrack(hapticInfo);
             else hapticEngine.clear();
@@ -214,23 +213,22 @@ public class MainActivity extends AppCompatActivity {
             if (r.channelCount <= 0) chText = "Unknown";
             else if (r.channelCount == 1) chText = "Mono";
             else if (r.channelCount == 2) chText = "Stereo";
-            else chText = r.channelCount + "ch (3ch 이상: Haptic 포함 가능)";
+            else chText = r.channelCount + "ch (≥3: haptic ch3 assumed)";
 
             String info = ""
                     + "Container/MIME : " + safe(r.mime) + "\n"
                     + "Channels       : " + chText + "\n"
-                    + "Haptic Tag     : " + (r.hasHapticTag ? "존재 가능(ANDROID_HAPTIC 발견)" : "미확인") + "\n"
+                    + "Haptic Tag     : " + (r.hasHapticTag ? "ANDROID_HAPTIC 발견" : "미확인") + "\n"
                     + "Haptic 추정    : " + (r.hasHaptic() ? "있음(추정)" : "없음(추정)") + "\n"
                     + "Sample Rate    : " + (r.sampleRate > 0 ? r.sampleRate + " Hz" : "Unknown") + "\n"
                     + "Audio Duration : " + formatMs10(audioDurationMs) + "\n"
-                    + "Haptic Duration: " + (hapticInfo != null ? formatMs10(hapticInfo.totalDurationMs) : "Unknown") + "\n"
-                    + (r.notes == null ? "" : ("Notes          : " + r.notes + "\n"));
+                    + "Haptic Duration: " + (hapticInfo != null ? formatMs10(hapticInfo.totalDurationMs) : "Unknown") + "\n";
 
             tvInfo.setText(info);
             updateTimesAndSeek();
 
         } catch (Exception e) {
-            tvInfo.setText("메타데이터/파싱 실패: " + e.getMessage());
+            tvInfo.setText("메타/파싱 실패: " + e.getMessage());
             Log.e(TAG, "showMetadata error", e);
         }
     }
@@ -249,14 +247,14 @@ public class MainActivity extends AppCompatActivity {
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC);
 
-            // Haptic 채널 음소거 해제(Framework 쪽 ACH 사용 시 의미). 독립 엔진과 별개로 설정 유지.
+            // 시스템 ACH는 음소거 → 오디오는 소리만 재생(햅틱은 우리 엔진이 별도로)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                ab.setHapticChannelsMuted(false);
+                ab.setHapticChannelsMuted(true);
             } else {
                 try {
                     Method m = AudioAttributes.Builder.class
                             .getMethod("setHapticChannelsMuted", boolean.class);
-                    m.invoke(ab, false);
+                    m.invoke(ab, true);
                 } catch (Throwable ignore) {}
             }
 
@@ -265,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer.setOnPreparedListener(mp -> {
                 audioDurationMs = mp.getDuration();
                 mp.start();
-                Toast.makeText(this, "오디오 재생 시작", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "오디오 재생 시작(시스템 ACH 끔)", Toast.LENGTH_SHORT).show();
             });
             mediaPlayer.setOnCompletionListener(mp -> {
                 Toast.makeText(this, "오디오 재생 완료", Toast.LENGTH_SHORT).show();
@@ -345,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
         int h = totalSec / 3600;
         int m = (totalSec % 3600) / 60;
         int s = totalSec % 60;
-        int cs = (ms % 1000) / 10; // 10ms 단위(0~99)
+        int cs = (ms % 1000) / 10; // 10ms 단위
         if (h > 0) return String.format(Locale.US, "%d:%02d:%02d.%02d", h, m, s, cs);
         return String.format(Locale.US, "%02d:%02d.%02d", m, s, cs);
     }
@@ -375,13 +373,9 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             Uri uri = Uri.parse(last);
-            // 여전히 권한이 있는지 확인
             boolean stillHave = false;
-            List<UriPermission> perms = getContentResolver().getPersistedUriPermissions();
-            for (UriPermission p : perms) {
-                if (p.getUri().equals(uri) && p.isReadPermission()) {
-                    stillHave = true; break;
-                }
+            for (UriPermission p : getContentResolver().getPersistedUriPermissions()) {
+                if (p.getUri().equals(uri) && p.isReadPermission()) { stillHave = true; break; }
             }
             if (stillHave) {
                 selectedUri = uri;
@@ -408,23 +402,16 @@ public class MainActivity extends AppCompatActivity {
         private boolean playing = false;
         private long baseTrackMs = 0;      // 트랙 기준 시작 오프셋
         private long baseRealtimeMs = 0;   // 실제 시작 시간 (elapsedRealtime)
-        private final List<Runnable> scheduled = new ArrayList<>();
 
-        HapticPlaybackEngine(Vibrator vibrator) {
-            this.vibrator = vibrator;
-        }
+        HapticPlaybackEngine(Vibrator vibrator) { this.vibrator = vibrator; }
 
         void setTrack(OggHapticInspector.HapticTrackInfo info) {
-            stopInternal(true);
+            stop();
             this.track = info;
             this.baseTrackMs = 0;
         }
 
-        void clear() {
-            stopInternal(true);
-            this.track = null;
-            this.baseTrackMs = 0;
-        }
+        void clear() { stop(); this.track = null; this.baseTrackMs = 0; }
 
         boolean isPlaying() { return playing; }
 
@@ -439,85 +426,76 @@ public class MainActivity extends AppCompatActivity {
 
         void playFrom(long trackMs) {
             if (track == null) return;
-            stopInternal(false);
+            stopInternal();
             playing = true;
             baseTrackMs = clamp(trackMs, 0, track.totalDurationMs);
             baseRealtimeMs = SystemClock.elapsedRealtime();
-            scheduleFrom(baseTrackMs);
+
+            // 10ms bins → 연속 원샷으로 보내면 gaps 생길 수 있어, 40~60ms로 묶어서 예약
+            final int BIN = 10; // ms
+            long t = baseTrackMs;
+            while (t < track.totalDurationMs) {
+                int amp = track.getAmplitudeAt(t);
+                if (amp <= 0) { t += BIN; continue; }
+                // 같은 amp가 이어지는 구간을 하나로 묶기
+                long segStart = t;
+                long segEnd = Math.min(track.totalDurationMs, t + BIN);
+                long cursor = segEnd;
+                while (cursor < track.totalDurationMs && track.getAmplitudeAt(cursor) == amp) {
+                    cursor += BIN;
+                }
+                long dur = cursor - segStart;
+
+                long delay = (baseRealtimeMs + (segStart - baseTrackMs)) - SystemClock.elapsedRealtime();
+                if (delay < 0) delay = 0;
+                final int fAmp = amp;
+                final long fDur = dur;
+
+                handler.postDelayed(() -> {
+                    if (!playing) return;
+                    try {
+                        if (Build.VERSION.SDK_INT >= 26) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(fDur, fAmp));
+                        } else {
+                            vibrator.vibrate(fDur);
+                        }
+                    } catch (Exception ignore) {}
+                }, delay);
+
+                t = cursor;
+            }
+
+            // 끝에서 자동 정지
+            long tailDelay = (baseRealtimeMs + (track.totalDurationMs - baseTrackMs)) - SystemClock.elapsedRealtime();
+            if (tailDelay < 0) tailDelay = 0;
+            handler.postDelayed(() -> playing = false, tailDelay);
         }
 
         void pause() {
             if (!playing) return;
             long pos = getCurrentPositionMs();
-            stopInternal(true);
+            stopInternal();
             baseTrackMs = pos;
         }
 
         void stop() {
-            stopInternal(true);
+            stopInternal();
             baseTrackMs = 0;
         }
 
         void seekTo(long trackMs, boolean resumeIfPlaying) {
             boolean wasPlaying = playing;
-            stopInternal(false);
+            stopInternal();
             baseTrackMs = clamp(trackMs, 0, (track != null ? track.totalDurationMs : 0));
             if (track != null && (resumeIfPlaying || wasPlaying)) {
-                playing = true;
-                baseRealtimeMs = SystemClock.elapsedRealtime();
-                scheduleFrom(baseTrackMs);
+                playFrom(baseTrackMs);
             }
         }
 
-        private void stopInternal(boolean stopPlaybackFlag) {
-            for (Runnable r : scheduled) handler.removeCallbacks(r);
-            scheduled.clear();
+        private void stopInternal() {
+            handler.removeCallbacksAndMessages(null);
             try { vibrator.cancel(); } catch (Exception ignore) {}
-            if (stopPlaybackFlag) playing = false;
-        }
-
-        private void scheduleFrom(long startTrackMs) {
-            if (track == null) return;
-
-            long start = startTrackMs;
-            for (OggHapticInspector.HapticSegment seg : track.segments) {
-                long segStart = seg.startMs;
-                long segEnd = seg.startMs + seg.durationMs;
-                if (segEnd <= start) continue;
-                long effectiveStart = Math.max(segStart, start);
-
-                long delayFromNow = (baseRealtimeMs + (effectiveStart - baseTrackMs)) - SystemClock.elapsedRealtime();
-                if (delayFromNow < 0) delayFromNow = 0;
-
-                long remaining = segEnd - effectiveStart;
-                if (remaining <= 0) continue;
-
-                final int amplitude = seg.amplitude;
-                final long vibrateDuration = remaining;
-
-                Runnable r = () -> {
-                    if (!playing) return;
-                    try {
-                        if (Build.VERSION.SDK_INT >= 26) {
-                            VibrationEffect effect = VibrationEffect.createOneShot(vibrateDuration, amplitude);
-                            vibrator.vibrate(effect);
-                        } else {
-                            vibrator.vibrate(vibrateDuration);
-                        }
-                    } catch (Exception ignore) {}
-                };
-                scheduled.add(r);
-                handler.postDelayed(r, delayFromNow);
-            }
-
-            long tailDelay = (baseRealtimeMs + (track.totalDurationMs - baseTrackMs)) - SystemClock.elapsedRealtime();
-            if (tailDelay < 0) tailDelay = 0;
-            Runnable tail = () -> {
-                playing = false;
-                try { vibrator.cancel(); } catch (Exception ignore) {}
-            };
-            scheduled.add(tail);
-            handler.postDelayed(tail, tailDelay);
+            playing = false;
         }
 
         private static long clamp(long v, long lo, long hi) {
