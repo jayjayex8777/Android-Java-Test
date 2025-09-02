@@ -1,72 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="ACH OGG Music Player"
-        android:textStyle="bold"
-        android:textSize="20sp"
-        android:paddingBottom="8dp"/>
-
-    <Button
-        android:id="@+id/btnPick"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_pick"/>
-
-    <TextView
-        android:id="@+id/tvPath"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/hint_path"
-        android:textSize="12sp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp" />
-
-    <!-- 재생 컨트롤 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="3">
-
-        <Button
-            android:id="@+id/btnPlay"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/btn_play"/>
-
-        <Button
-            android:id="@+id/btnPause"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/btn_pause"
-            android:layout_marginStart="8dp"/>
-
-        <Button
-            android:id="@+id/btnStop"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/btn_stop"
-            android:layout_marginStart="8dp"/>
-    </LinearLayout>
-
-    <!-- 오디오/햅틱 시간 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="8dp">
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ACH OGG Music Player"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:paddingBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnPick"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_pick"/>
+
+        <TextView
+            android:id="@+id/tvPath"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/hint_path"
+            android:textSize="12sp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
+        <!-- ===== 오디오 컨트롤 ===== -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/section_audio"
+            android:textStyle="bold"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="3">
+
+            <Button
+                android:id="@+id/btnPlay"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_play"/>
+
+            <Button
+                android:id="@+id/btnPause"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_pause"
+                android:layout_marginStart="8dp"/>
+
+            <Button
+                android:id="@+id/btnStop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_stop"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvAudioTime"
@@ -74,29 +79,102 @@
             android:layout_height="wrap_content"
             android:text="@string/label_audio_time" />
 
+        <SeekBar
+            android:id="@+id/seekAudio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/seekbar_audio_desc"
+            android:max="1000" />
+
+        <!-- ===== 햅틱 컨트롤 (오디오와 독립) ===== -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/section_haptic"
+            android:textStyle="bold"
+            android:paddingTop="12dp"
+            android:paddingBottom="4dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="4">
+
+            <Button
+                android:id="@+id/btnHapticPlay"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_haptic_play"/>
+
+            <Button
+                android:id="@+id/btnHapticPause"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_haptic_pause"
+                android:layout_marginStart="8dp"/>
+
+            <Button
+                android:id="@+id/btnHapticStop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_haptic_stop"
+                android:layout_marginStart="8dp"/>
+
+            <Button
+                android:id="@+id/btnHapticResync"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_haptic_resync"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:paddingTop="6dp">
+
+            <Button
+                android:id="@+id/btnDesyncMinus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_desync_minus"/>
+
+            <Button
+                android:id="@+id/btnDesyncPlus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_desync_plus"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tvHapticTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/label_haptic_time"
-            android:layout_marginTop="4dp" />
+            android:text="@string/label_haptic_time" />
+
+        <SeekBar
+            android:id="@+id/seekHaptic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/seekbar_haptic_desc"
+            android:max="1000" />
+
+        <!-- 파일/포맷 정보 -->
+        <TextView
+            android:id="@+id/tvInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/hint_info"
+            android:paddingTop="12dp"/>
     </LinearLayout>
-
-    <!-- 타임라인(오디오/햅틱 동기 시킹) -->
-    <SeekBar
-        android:id="@+id/seekBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:contentDescription="@string/seekbar_desc"
-        android:max="1000" />
-
-    <!-- 파일/포맷 정보 -->
-    <TextView
-        android:id="@+id/tvInfo"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="@string/hint_info"
-        android:paddingTop="12dp"/>
-</LinearLayout>
+</ScrollView>
