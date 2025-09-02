@@ -1,0 +1,3 @@
+Android resource linking failed
+com.example.achoggmusicplayer.app-mergeDebugResources-35:/layout/activity_main.xml:15: error: attribute show_controller (aka com.example.achoggmusicplayer:show_controller) not found.
+error: failed linking file resources.
