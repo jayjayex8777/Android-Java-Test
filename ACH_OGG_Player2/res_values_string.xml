@@ -1,16 +1,30 @@
 <resources>
     <string name="app_name">ACH OGG Music Player</string>
 
+    <!-- 공통 -->
+    <string name="time_sep"> / </string>
+    <string name="hint_path">선택된 파일 경로가 여기 표시됩니다.</string>
+    <string name="hint_info">파일 메타데이터/햅틱 정보가 여기에 표시됩니다.</string>
+
+    <!-- 파일 -->
     <string name="btn_pick">파일 선택 (OGG)</string>
+
+    <!-- 오디오 -->
+    <string name="section_audio">Audio Controls</string>
     <string name="btn_play">Play</string>
     <string name="btn_pause">Pause</string>
     <string name="btn_stop">Stop</string>
-
     <string name="label_audio_time">Audio</string>
-    <string name="label_haptic_time">Haptic (synced)</string>
-    <string name="time_sep"> / </string>
-    <string name="seekbar_desc">Timeline</string>
+    <string name="seekbar_audio_desc">Audio Timeline</string>
 
-    <string name="hint_path">선택된 파일 경로가 여기 표시됩니다.</string>
-    <string name="hint_info">파일 메타데이터 정보가 여기에 표시됩니다.</string>
+    <!-- 햅틱 -->
+    <string name="section_haptic">Haptic Controls (independent)</string>
+    <string name="btn_haptic_play">Haptic Play</string>
+    <string name="btn_haptic_pause">Haptic Pause</string>
+    <string name="btn_haptic_stop">Haptic Stop</string>
+    <string name="btn_haptic_resync">Resync to Audio</string>
+    <string name="btn_desync_minus">-100 ms (desync)</string>
+    <string name="btn_desync_plus">+100 ms (desync)</string>
+    <string name="label_haptic_time">Haptic</string>
+    <string name="seekbar_haptic_desc">Haptic Timeline</string>
 </resources>
