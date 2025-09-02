@@ -1,4 +1,4 @@
-package com.example.achoggplayer;
+package com.example.achoggmusicplayer;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvTime;
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
-    private final long UI_UPDATE_INTERVAL_MS = 10L; // 10ms 단위 업데이트
+    private static final long UI_UPDATE_INTERVAL_MS = 10L; // 10ms 단위 업데이트
 
     private final Runnable timeUpdater = new Runnable() {
         @Override
@@ -59,7 +59,9 @@ public class MainActivity extends AppCompatActivity {
                                     | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
                             try {
                                 getContentResolver().takePersistableUriPermission(uri, flags);
-                            } catch (SecurityException ignored) {}
+                            } catch (SecurityException ignored) {
+                                // 일부 기기에서 WRITE 권한은 거부될 수 있음. READ만으로도 재생 가능.
+                            }
                             lastPickedUri = uri;
                             playUri(uri);
                         }
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         playerView = findViewById(R.id.playerView);
         tvTime = findViewById(R.id.tvTime);
 
+        // ExoPlayer 생성 + 오디오 속성
         player = new ExoPlayer.Builder(this).build();
         AudioAttributes attrs = new AudioAttributes.Builder()
                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -82,6 +85,12 @@ public class MainActivity extends AppCompatActivity {
         player.setAudioAttributes(attrs, true);
         playerView.setPlayer(player);
 
+        // XML 커스텀 속성 대신 코드로 컨트롤러 설정 (빌드 에러 회피)
+        playerView.setUseController(true);
+        playerView.setControllerAutoShow(true);
+        playerView.setControllerShowTimeoutMs(3000);
+
+        // 플레이어 상태 리스너: READY 시 총 길이 표시 초기화
         player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int playbackState) {
@@ -104,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
         Button btnHaptic = findViewById(R.id.btnHaptic);
         btnHaptic.setOnClickListener(v -> {
             if (lastPickedUri != null) {
+                // 프로젝트에 이미 있는 HapticController 사용 (없다면 주석 처리 가능)
                 HapticController.playFromMetadata(this, lastPickedUri);
             }
         });
