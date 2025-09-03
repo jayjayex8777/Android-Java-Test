@@ -14,25 +14,57 @@
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ACH OGG Player (Audio & Haptic: Independent)"
+            android:text="ACH OGG Player (Audio & Haptic: separate files)"
             android:textStyle="bold"
             android:textSize="18sp"
             android:paddingBottom="8dp"/>
 
-        <Button
-            android:id="@+id/btnPick"
+        <!-- ===== 파일 선택 영역 ===== -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/btn_pick"/>
+            android:text="@string/section_pick"
+            android:textStyle="bold"
+            android:paddingBottom="6dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <Button
+                android:id="@+id/btnPickAudio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_pick_audio"/>
+
+            <Button
+                android:id="@+id/btnPickHaptic"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_pick_haptic"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/tvPath"
+            android:id="@+id/tvAudioPath"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/hint_path"
+            android:text="@string/hint_audio_path"
             android:textSize="12sp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp" />
+            android:paddingTop="6dp"/>
+
+        <TextView
+            android:id="@+id/tvHapticPath"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/hint_haptic_path"
+            android:textSize="12sp"
+            android:paddingTop="2dp"
+            android:paddingBottom="8dp"/>
 
         <!-- ===== 오디오 컨트롤 ===== -->
         <TextView
@@ -86,7 +118,7 @@
             android:contentDescription="@string/seekbar_audio_desc"
             android:max="1000" />
 
-        <!-- ===== 햅틱 컨트롤 (오디오와 독립) ===== -->
+        <!-- ===== 햅틱 컨트롤 (오디오와 독립, 다른 파일 가능) ===== -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -169,7 +201,7 @@
             android:contentDescription="@string/seekbar_haptic_desc"
             android:max="1000" />
 
-        <!-- 파일/포맷 정보 -->
+        <!-- 정보 -->
         <TextView
             android:id="@+id/tvInfo"
             android:layout_width="match_parent"
