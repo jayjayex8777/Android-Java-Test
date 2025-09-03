@@ -1,14 +1,18 @@
 <resources>
-    <!-- 앱 -->
     <string name="app_name">ACH OGG Music Player</string>
+
+    <!-- 파일 선택 -->
+    <string name="section_pick">Pick Files</string>
+    <string name="btn_pick_audio">오디오 파일 선택 (OGG)</string>
+    <string name="btn_pick_haptic">햅틱 파일 선택 (OGG)</string>
+    <string name="hint_audio_path">오디오 파일: 미선택</string>
+    <string name="hint_haptic_path">햅틱 파일: 미선택</string>
 
     <!-- 공통 -->
     <string name="time_sep"> / </string>
-    <string name="hint_path">선택된 파일 경로가 여기 표시됩니다.</string>
-    <string name="hint_info">파일 메타/햅틱 정보가 여기에 표시됩니다.</string>
-    <string name="btn_pick">파일 선택 (OGG)</string>
+    <string name="hint_info">파일 메타/길이가 여기에 표시됩니다.</string>
 
-    <!-- 오디오 섹션 -->
+    <!-- 오디오 -->
     <string name="section_audio">Audio Controls</string>
     <string name="btn_play">Play</string>
     <string name="btn_pause">Pause</string>
@@ -16,7 +20,7 @@
     <string name="label_audio_time">Audio</string>
     <string name="seekbar_audio_desc">Audio Timeline</string>
 
-    <!-- 햅틱 섹션 (오디오와 독립 제어) -->
+    <!-- 햅틱 -->
     <string name="section_haptic">Haptic Controls (independent)</string>
     <string name="btn_haptic_play">Haptic Play</string>
     <string name="btn_haptic_pause">Haptic Pause</string>
