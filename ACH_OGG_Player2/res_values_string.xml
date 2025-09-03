@@ -8,6 +8,12 @@
     <string name="hint_audio_path">오디오 파일: 미선택</string>
     <string name="hint_haptic_path">햅틱 파일: 미선택</string>
 
+    <!-- 동시 제어 (새로 추가) -->
+    <string name="section_both">Both Controls</string>
+    <string name="btn_both_play">Both Play</string>
+    <string name="btn_both_pause">Both Pause</string>
+    <string name="btn_both_stop">Both Stop</string>
+
     <!-- 공통 -->
     <string name="time_sep"> / </string>
     <string name="hint_info">파일 메타/길이가 여기에 표시됩니다.</string>
