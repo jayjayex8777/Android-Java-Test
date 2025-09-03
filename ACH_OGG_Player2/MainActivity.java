@@ -33,7 +33,7 @@ import java.util.Locale;
  * A.ogg → 오디오 전용, B.ogg → 햅틱 전용 (파일을 각각 선택)
  * - mpAudio: 오디오만 재생(ACH 진동 mute)
  * - mpHaptic: 오디오는 0볼륨, ACH 진동만 출력
- * 기존 독립 제어(Play/Pause/Stop/Seek/디싱크/재동기화)와 10ms 단위 표시는 유지.
+ * 기존 독립 제어 + 새로 추가된 동시 제어(Both Play/Pause/Stop)
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnPickAudio, btnPickHaptic;
     private TextView tvAudioPath, tvHapticPath, tvInfo;
     private Button btnPlay, btnPause, btnStop;
+    private Button btnBothPlay, btnBothPause, btnBothStop; // 새로 추가
     private TextView tvAudioTime, tvHapticTime;
     private SeekBar seekAudio, seekHaptic;
     private Button btnHapticPlay, btnHapticPause, btnHapticStop, btnHapticResync, btnDesyncMinus, btnDesyncPlus;
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    // 파일 선택 런처 (오디오/햅틱 분리)
+    // 파일 선택 런처
     private final ActivityResultLauncher<String[]> pickAudioLauncher =
             registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri != null) {
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                     audioUri = uri;
                     tvAudioPath.setText("오디오 파일: " + uri);
                     saveUris();
-                    prepareAudio(); // 오디오만 준비
+                    prepareAudio();
                 }
             });
 
@@ -90,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                     hapticUri = uri;
                     tvHapticPath.setText("햅틱 파일: " + uri);
                     saveUris();
-                    prepareHaptic(); // 햅틱만 준비
+                    prepareHaptic();
                 }
             });
 
@@ -113,6 +114,12 @@ public class MainActivity extends AppCompatActivity {
         tvHapticPath = findViewById(R.id.tvHapticPath);
         tvInfo = findViewById(R.id.tvInfo);
 
+        // 동시 제어(새 버튼)
+        btnBothPlay = findViewById(R.id.btnBothPlay);
+        btnBothPause = findViewById(R.id.btnBothPause);
+        btnBothStop = findViewById(R.id.btnBothStop);
+
+        // 개별 컨트롤
         btnPlay = findViewById(R.id.btnPlay);
         btnPause = findViewById(R.id.btnPause);
         btnStop = findViewById(R.id.btnStop);
@@ -133,6 +140,12 @@ public class MainActivity extends AppCompatActivity {
         btnPickAudio.setOnClickListener(v -> pickAudioLauncher.launch(MIME()));
         btnPickHaptic.setOnClickListener(v -> pickHapticLauncher.launch(MIME()));
 
+        // 동시 제어 리스너
+        btnBothPlay.setOnClickListener(v -> bothPlay());
+        btnBothPause.setOnClickListener(v -> bothPause());
+        btnBothStop.setOnClickListener(v -> bothStop());
+
+        // 오디오 개별
         btnPlay.setOnClickListener(v -> { if (ensureAudioReady()) try { mpAudio.start(); } catch (Exception ignore) {} });
         btnPause.setOnClickListener(v -> { if (mpAudio != null && mpAudio.isPlaying()) try { mpAudio.pause(); } catch (Exception ignore) {} });
         btnStop.setOnClickListener(v -> stopAudio());
@@ -152,12 +165,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 햅틱 제어
-        btnHapticPlay.setOnClickListener(v -> {
-            if (ensureHapticReady()) {
-                try { mpHaptic.setVolume(0f, 0f); mpHaptic.start(); } catch (Exception ignore) {}
-            }
-        });
+        // 햅틱 개별
+        btnHapticPlay.setOnClickListener(v -> { if (ensureHapticReady()) try { mpHaptic.setVolume(0f,0f); mpHaptic.start(); } catch (Exception ignore) {} });
         btnHapticPause.setOnClickListener(v -> { if (mpHaptic != null && mpHaptic.isPlaying()) try { mpHaptic.pause(); } catch (Exception ignore) {} });
         btnHapticStop.setOnClickListener(v -> stopHaptic());
 
@@ -169,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
             boolean resume = mpHaptic.isPlaying();
             try {
                 int max = (int) (hapticDurationMs > 0 ? hapticDurationMs : mpHaptic.getDuration());
-                if (aPos > max) aPos = max; // 범위 제한
+                if (aPos > max) aPos = max;
                 mpHaptic.seekTo(aPos);
                 if (resume) mpHaptic.start();
             } catch (Exception ignore) {}
@@ -191,10 +200,7 @@ public class MainActivity extends AppCompatActivity {
                 fromUser = false;
                 int target = (int) (hapticDurationMs * (sb.getProgress() / (float) sb.getMax()));
                 boolean resume = mpHaptic.isPlaying();
-                try {
-                    mpHaptic.seekTo(target);
-                    if (resume) mpHaptic.start();
-                } catch (Exception ignore) {}
+                try { mpHaptic.seekTo(target); if (resume) mpHaptic.start(); } catch (Exception ignore) {}
                 updateTimesAndSeek();
             }
         });
@@ -210,102 +216,43 @@ public class MainActivity extends AppCompatActivity {
         return new String[]{"audio/ogg", "application/ogg", "audio/x-ogg"};
     }
 
-    // ===== 오디오 준비 =====
+    // ===== 동시 제어 구현 =====
+    private void bothPlay() {
+        boolean started = false;
+        if (ensureAudioReady()) {
+            try { mpAudio.start(); started = true; } catch (Exception ignore) {}
+        }
+        if (ensureHapticReady()) {
+            try { mpHaptic.setVolume(0f,0f); mpHaptic.start(); started = true; } catch (Exception ignore) {}
+        }
+        if (!started) Toast.makeText(this, "먼저 오디오/햅틱 파일을 선택하세요.", Toast.LENGTH_SHORT).show();
+    }
+
+    private void bothPause() {
+        boolean any = false;
+        try { if (mpAudio != null && mpAudio.isPlaying()) { mpAudio.pause(); any = true; } } catch (Exception ignore) {}
+        try { if (mpHaptic != null && mpHaptic.isPlaying()) { mpHaptic.pause(); any = true; } } catch (Exception ignore) {}
+        if (!any) Toast.makeText(this, "일시정지할 대상이 없습니다.", Toast.LENGTH_SHORT).show();
+    }
+
+    private void bothStop() {
+        stopAudio();
+        stopHaptic();
+    }
+
+    // ===== 오디오 준비/제어 =====
     private void prepareAudio() {
         releaseAudio();
         if (audioUri == null) return;
 
         mpAudio = new MediaPlayer();
         mpAudio.setAudioAttributes(buildAudioAttrs(/*hapticMuted=*/true));
-        try {
-            mpAudio.setDataSource(this, audioUri);
-        } catch (Exception e) {
-            Toast.makeText(this, "오디오 dataSource 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            Log.e(TAG, "mpAudio.setDataSource", e);
-            releaseAudio();
-            return;
-        }
-        mpAudio.setOnPreparedListener(mp -> {
-            audioDurationMs = mp.getDuration();
-            updateInfo();
-        });
+        try { mpAudio.setDataSource(this, audioUri); }
+        catch (Exception e) { Toast.makeText(this, "오디오 dataSource 실패: " + e.getMessage(), Toast.LENGTH_LONG).show(); Log.e(TAG,"mpAudio.setDataSource",e); releaseAudio(); return; }
+        mpAudio.setOnPreparedListener(mp -> { audioDurationMs = mp.getDuration(); updateInfo(); });
         mpAudio.setOnCompletionListener(mp -> updateTimesAndSeek());
-        mpAudio.setOnErrorListener((mp, what, extra) -> {
-            Toast.makeText(this, "오디오 오류: " + what + "/" + extra, Toast.LENGTH_LONG).show();
-            return true;
-        });
+        mpAudio.setOnErrorListener((mp, what, extra) -> { Toast.makeText(this, "오디오 오류: " + what + "/" + extra, Toast.LENGTH_LONG).show(); return true; });
         mpAudio.prepareAsync();
-    }
-
-    // ===== 햅틱 준비 =====
-    private void prepareHaptic() {
-        releaseHaptic();
-        if (hapticUri == null) return;
-
-        mpHaptic = new MediaPlayer();
-        mpHaptic.setAudioAttributes(buildAudioAttrs(/*hapticMuted=*/false));
-        mpHaptic.setVolume(0f, 0f); // 소리는 항상 무음
-        try {
-            mpHaptic.setDataSource(this, hapticUri);
-        } catch (Exception e) {
-            Toast.makeText(this, "햅틱 dataSource 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            Log.e(TAG, "mpHaptic.setDataSource", e);
-            releaseHaptic();
-            return;
-        }
-        mpHaptic.setOnPreparedListener(mp -> {
-            hapticDurationMs = mp.getDuration();
-            updateInfo();
-        });
-        mpHaptic.setOnCompletionListener(mp -> updateTimesAndSeek());
-        mpHaptic.setOnErrorListener((mp, what, extra) -> {
-            Toast.makeText(this, "햅틱 오류: " + what + "/" + extra, Toast.LENGTH_LONG).show();
-            return true;
-        });
-        mpHaptic.prepareAsync();
-    }
-
-    // ===== 공통 =====
-    private AudioAttributes buildAudioAttrs(boolean hapticMuted) {
-        AudioAttributes.Builder ab = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            ab.setHapticChannelsMuted(hapticMuted);
-        } else {
-            try {
-                Method m = AudioAttributes.Builder.class
-                        .getMethod("setHapticChannelsMuted", boolean.class);
-                m.invoke(ab, hapticMuted);
-            } catch (Throwable ignore) {}
-        }
-        return ab.build();
-    }
-
-    private boolean ensureAudioReady() {
-        if (audioUri == null) {
-            Toast.makeText(this, "오디오 파일을 먼저 선택해 주세요.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (mpAudio == null) {
-            prepareAudio();
-            Toast.makeText(this, "오디오 준비 중...", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        return true;
-    }
-
-    private boolean ensureHapticReady() {
-        if (hapticUri == null) {
-            Toast.makeText(this, "햅틱 파일을 먼저 선택해 주세요.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (mpHaptic == null) {
-            prepareHaptic();
-            Toast.makeText(this, "햅틱 준비 중...", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        return true;
     }
 
     private void stopAudio() {
@@ -315,9 +262,23 @@ public class MainActivity extends AppCompatActivity {
                 mpAudio.seekTo(0);
                 updateTimesAndSeek();
             }
-        } catch (Exception e) {
-            Log.e(TAG, "stopAudio", e);
-        }
+        } catch (Exception e) { Log.e(TAG, "stopAudio", e); }
+    }
+
+    // ===== 햅틱 준비/제어 =====
+    private void prepareHaptic() {
+        releaseHaptic();
+        if (hapticUri == null) return;
+
+        mpHaptic = new MediaPlayer();
+        mpHaptic.setAudioAttributes(buildAudioAttrs(/*hapticMuted=*/false));
+        mpHaptic.setVolume(0f, 0f);
+        try { mpHaptic.setDataSource(this, hapticUri); }
+        catch (Exception e) { Toast.makeText(this, "햅틱 dataSource 실패: " + e.getMessage(), Toast.LENGTH_LONG).show(); Log.e(TAG,"mpHaptic.setDataSource",e); releaseHaptic(); return; }
+        mpHaptic.setOnPreparedListener(mp -> { hapticDurationMs = mp.getDuration(); updateInfo(); });
+        mpHaptic.setOnCompletionListener(mp -> updateTimesAndSeek());
+        mpHaptic.setOnErrorListener((mp, what, extra) -> { Toast.makeText(this, "햅틱 오류: " + what + "/" + extra, Toast.LENGTH_LONG).show(); return true; });
+        mpHaptic.prepareAsync();
     }
 
     private void stopHaptic() {
@@ -327,9 +288,7 @@ public class MainActivity extends AppCompatActivity {
                 mpHaptic.seekTo(0);
                 updateTimesAndSeek();
             }
-        } catch (Exception e) {
-            Log.e(TAG, "stopHaptic", e);
-        }
+        } catch (Exception e) { Log.e(TAG, "stopHaptic", e); }
     }
 
     private void nudgeHaptic(int deltaMs) {
@@ -341,9 +300,35 @@ public class MainActivity extends AppCompatActivity {
             boolean resume = mpHaptic.isPlaying();
             mpHaptic.seekTo(next);
             if (resume) mpHaptic.start();
-        } catch (Exception e) {
-            Log.e(TAG, "nudgeHaptic", e);
+        } catch (Exception e) { Log.e(TAG, "nudgeHaptic", e); }
+    }
+
+    // ===== 공통 =====
+    private AudioAttributes buildAudioAttrs(boolean hapticMuted) {
+        AudioAttributes.Builder ab = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ab.setHapticChannelsMuted(hapticMuted);
+        } else {
+            try {
+                Method m = AudioAttributes.Builder.class.getMethod("setHapticChannelsMuted", boolean.class);
+                m.invoke(ab, hapticMuted);
+            } catch (Throwable ignore) {}
         }
+        return ab.build();
+    }
+
+    private boolean ensureAudioReady() {
+        if (audioUri == null) { Toast.makeText(this, "오디오 파일을 먼저 선택해 주세요.", Toast.LENGTH_SHORT).show(); return false; }
+        if (mpAudio == null) { prepareAudio(); Toast.makeText(this, "오디오 준비 중...", Toast.LENGTH_SHORT).show(); return false; }
+        return true;
+    }
+
+    private boolean ensureHapticReady() {
+        if (hapticUri == null) { Toast.makeText(this, "햅틱 파일을 먼저 선택해 주세요.", Toast.LENGTH_SHORT).show(); return false; }
+        if (mpHaptic == null) { prepareHaptic(); Toast.makeText(this, "햅틱 준비 중...", Toast.LENGTH_SHORT).show(); return false; }
+        return true;
     }
 
     private void updateTimesAndSeek() {
@@ -355,9 +340,7 @@ public class MainActivity extends AppCompatActivity {
                 aDur = mpAudio.getDuration() > 0 ? mpAudio.getDuration() : (int) audioDurationMs;
             }
         } catch (Exception ignore) {}
-
-        tvAudioTime.setText(getString(R.string.label_audio_time)
-                + "  " + formatClock10(aPos) + getString(R.string.time_sep) + formatClock10(aDur));
+        tvAudioTime.setText(getString(R.string.label_audio_time) + "  " + formatClock10(aPos) + getString(R.string.time_sep) + formatClock10(aDur));
         seekAudio.setProgress(aDur > 0 ? Math.round((aPos / (float) aDur) * seekAudio.getMax()) : 0);
 
         // 햅틱
@@ -368,9 +351,7 @@ public class MainActivity extends AppCompatActivity {
                 hDur = mpHaptic.getDuration() > 0 ? mpHaptic.getDuration() : (int) hapticDurationMs;
             }
         } catch (Exception ignore) {}
-
-        tvHapticTime.setText(getString(R.string.label_haptic_time)
-                + "  " + formatClock10(hPos) + getString(R.string.time_sep) + formatClock10(hDur));
+        tvHapticTime.setText(getString(R.string.label_haptic_time) + "  " + formatClock10(hPos) + getString(R.string.time_sep) + formatClock10(hDur));
         seekHaptic.setProgress(hDur > 0 ? Math.round((hPos / (float) hDur) * seekHaptic.getMax()) : 0);
     }
 
