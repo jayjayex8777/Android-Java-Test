@@ -33,6 +33,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
   private float[] gyr = new float[3];
   private boolean hasAcc = false, hasGyr = false;
 
+  // --- Gyro bias estimation (stationary-based EMA) ---
+  private final float[] gyroBias = new float[]{0f, 0f, 0f};
+  private static final float G = 9.80665f;
+  // 정지 판정 임계값(경험치): 자이로 노름(rad/s)과 중력 크기 편차(m/s^2)
+  private static final float STATIONARY_GYRO_NORM_THRESH = 0.08f;   // ~4.6°/s
+  private static final float STATIONARY_ACC_DEV_THRESH   = 0.80f;   // | |a|-g |
+  // EMA 계수(정지 시에만 갱신): 너무 크면 과민, 너무 작으면 느림
+  private static final float BIAS_EMA_ALPHA = 0.003f;               // 0.1%~0.5% 수준 권장
+
+  // Snap-to-zero 조건
+  private static final double SNAP_ANGLE_DEG_THRESH = 2.0;          // ±2°
+  private static final float  SNAP_GYRO_NORM_THRESH = 0.05f;        // 더 엄격한 자이로 정지 조건
+  private static final float  SNAP_ACC_DEV_THRESH   = 0.60f;
+
   // Timestamp (ns) for dt
   private long lastGyroTimestampNs = 0;
 
@@ -85,14 +99,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     if (accelSensor == null || gyroSensor == null) {
       tvStatus.setText("⚠️ 이 기기에서 가속도계 또는 자이로스코프를 사용할 수 없습니다.");
     } else {
-      tvStatus.setText("Sensors OK · Madgwick running");
+      tvStatus.setText("Sensors OK · Madgwick running · Bias & Snap enabled");
     }
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-    // SENSOR_DELAY_GAME 정도가 반응성과 부하 밸런스가 좋습니다.
     sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_GAME);
     sensorManager.registerListener(this, gyroSensor,  SensorManager.SENSOR_DELAY_GAME);
   }
@@ -118,39 +131,69 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float dt = (ts - lastGyroTimestampNs) * 1e-9f; // seconds
 
         if (hasAcc) {
-          // Madgwick update: gyro(rad/s), accel(m/s^2)
-          ahrs.update(gyr[0], gyr[1], gyr[2], acc[0], acc[1], acc[2], dt);
-          double[] q = ahrs.getQuaternion(); // [w,x,y,z]
+          // ---------- 1) 정지 감지 기반 자이로 바이어스 추정 ----------
+          final float gyroNorm = (float)Math.sqrt(gyr[0]*gyr[0] + gyr[1]*gyr[1] + gyr[2]*gyr[2]);
+          final float accMag   = (float)Math.sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
+          final float accDev   = Math.abs(accMag - G);
+          final boolean isStationaryForBias =
+              (gyroNorm < STATIONARY_GYRO_NORM_THRESH) && (accDev < STATIONARY_ACC_DEV_THRESH);
 
-          // Copy to current
+          if (isStationaryForBias) {
+            // EMA: bias = (1-α)*bias + α*gyro_meas
+            gyroBias[0] = (1f - BIAS_EMA_ALPHA) * gyroBias[0] + BIAS_EMA_ALPHA * gyr[0];
+            gyroBias[1] = (1f - BIAS_EMA_ALPHA) * gyroBias[1] + BIAS_EMA_ALPHA * gyr[1];
+            gyroBias[2] = (1f - BIAS_EMA_ALPHA) * gyroBias[2] + BIAS_EMA_ALPHA * gyr[2];
+          }
+
+          // 바이어스 보정된 자이로
+          final float gx = gyr[0] - gyroBias[0];
+          final float gy = gyr[1] - gyroBias[1];
+          final float gz = gyr[2] - gyroBias[2];
+
+          // ---------- 2) Madgwick 업데이트 ----------
+          ahrs.update(gx, gy, gz, acc[0], acc[1], acc[2], dt);
+          double[] q = ahrs.getQuaternion(); // [w,x,y,z]
           qCurr[0] = q[0]; qCurr[1] = q[1]; qCurr[2] = q[2]; qCurr[3] = q[3];
 
-          // Initialize reference orientation once (or after reset)
           if (!hasInit) {
             qInit[0] = qCurr[0]; qInit[1] = qCurr[1]; qInit[2] = qCurr[2]; qInit[3] = qCurr[3];
             hasInit = true;
           }
 
-          // Relative rotation q_rel = inv(qInit) * qCurr
-          double[] qInitInv = quatConjugate(qInit); // unit quaternion => inverse = conjugate
+          // 상대 회전 q_rel = inv(qInit) * qCurr
+          double[] qInitInv = quatConjugate(qInit); // 유니트 쿼터니언 가정
           double[] qRel = quatMultiply(qInitInv, qCurr);
           qRel = quatNormalize(qRel);
 
-          // Swing-Twist decomposition (twist about diagAxisBody at t0)
-          // Twist quaternion = keep only vector part parallel to axis
+          // 대각선 축 기준 twist 각도
           double axisDot = qRel[1]*diagAxisBody[0] + qRel[2]*diagAxisBody[1] + qRel[3]*diagAxisBody[2]; // q_vec · axis
           double w = qRel[0];
-          // Signed twist angle (radians) around the chosen axis:
           double angleRad = 2.0 * Math.atan2(axisDot, w);
           double angleDeg = Math.toDegrees(angleRad);
 
-          // UI throttling (~30–40 Hz)
+          // ---------- 3) Snap-to-zero 적용(표시각만 스냅) ----------
+          final boolean canSnap =
+              (Math.abs(angleDeg) <= SNAP_ANGLE_DEG_THRESH) &&
+              (gyroNorm < SNAP_GYRO_NORM_THRESH) &&
+              (accDev   < SNAP_ACC_DEV_THRESH);
+
+          if (canSnap) {
+            angleDeg = 0.0;
+          }
+
+          // UI 업데이트(쓰로틀)
           long now = SystemClock.elapsedRealtime();
           if (now - lastUiUpdateMs > 25) {
             lastUiUpdateMs = now;
             tvAngle.setText(String.format("Diagonal-axis angle: %7.2f°", angleDeg));
             tvQuat.setText(String.format("q = [w=%.4f, x=%.4f, y=%.4f, z=%.4f]", qCurr[0], qCurr[1], qCurr[2], qCurr[3]));
             tvDt.setText(String.format("dt=%.3f ms", dt*1000.0));
+            // 상태 텍스트에 현재 바이어스/정지여부 간단 표기
+            tvStatus.setText(String.format(
+                "Bias[rad/s]=[%.4f, %.4f, %.4f] · stationary=%s",
+                gyroBias[0], gyroBias[1], gyroBias[2],
+                isStationaryForBias ? "Y" : "N"
+            ));
           }
         }
       }
