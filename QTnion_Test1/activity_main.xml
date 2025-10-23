@@ -64,6 +64,19 @@
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
       android:paddingTop="8dp"
+      android:paddingBottom="8dp"/>
+
+  <!-- 새로 추가: G-force 표시 -->
+  <TextView
+      android:id="@+id/tvGForce"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:text="G-force: ---.--- g (|a|=---- m/s²)"
+      android:textSize="14sp"
+      app:layout_constraintTop_toBottomOf="@+id/tvStatus"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      android:paddingTop="4dp"
       android:paddingBottom="16dp"/>
 
   <Button
@@ -71,8 +84,7 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:text="RESET (Set current = 0°)"
-      app:layout_constraintTop_toBottomOf="@id/tvStatus"
-      app:layout_constraintStart_toStartOf="parent"
-      />
+      app:layout_constraintTop_toBottomOf="@id/tvGForce"
+      app:layout_constraintStart_toStartOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
