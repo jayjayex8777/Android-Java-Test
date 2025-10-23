@@ -63,8 +63,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
   // For simple FPS / dt display
   private long lastUiUpdateMs = 0;
 
-  // --- G-force 최대값 추적 ---
+  // --- G-force 최대값/현재값 추적 ---
   private double maxGForce = 0.0;
+  private double lastAccMag = G; // 최근 |a| (m/s^2), 초기값은 g
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +90,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     btnReset2= findViewById(R.id.btnReset2);
 
     btnReset.setOnClickListener(v -> resetReference());
-    btnReset2.setOnClickListener(v -> resetReference()); // 아래쪽 Reset도 동일 동작
+
+    // 아래쪽 Reset: G-force를 "현재 상태"로 재설정
+    btnReset2.setOnClickListener(v -> {
+      // 현재 측정된 |a|로 최대 G-force를 재정의
+      maxGForce = lastAccMag / G;
+      // 즉시 UI 반영(다음 주기까지 기다리지 않도록)
+      tvGForce.setText(String.format("G-force (max): %7.3f g  (|a|=%6.3f m/s²)", maxGForce, lastAccMag));
+      tvStatus.setText("G-force reset to current value");
+    });
 
     sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
     accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -136,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
           // 1) 정지 감지 기반 자이로 바이어스 추정
           final float gyroNorm = (float)Math.sqrt(gyr[0]*gyr[0] + gyr[1]*gyr[1] + gyr[2]*gyr[2]);
           final float accMag   = (float)Math.sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
+          lastAccMag = accMag; // 최근 |a| 저장
           final float accDev   = Math.abs(accMag - G);
           final boolean isStationaryForBias =
               (gyroNorm < STATIONARY_GYRO_NORM_THRESH) && (accDev < STATIONARY_ACC_DEV_THRESH);
@@ -195,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 gyroBias[0], gyroBias[1], gyroBias[2],
                 isStationaryForBias ? "Y" : "N"
             ));
-            // 항상 '최대값'을 표시 (요청사항)
+            // 항상 '최대값'을 표시
             tvGForce.setText(String.format("G-force (max): %7.3f g  (|a|=%6.3f m/s²)", maxGForce, accMag));
           }
         }
@@ -212,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     qInit[0] = q[0]; qInit[1] = q[1]; qInit[2] = q[2]; qInit[3] = q[3];
     hasInit = true;
     tvStatus.setText("Reference reset (0°) at current pose");
-    // 요구사항에 없으므로 maxGForce는 초기화하지 않음.
+    // 상단 Reset은 요구사항대로 G-force 최대값을 변경하지 않음.
   }
 
   // ---------- Math helpers ----------
