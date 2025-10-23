@@ -39,12 +39,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
   // 정지 판정 임계값(경험치): 자이로 노름(rad/s)과 중력 크기 편차(m/s^2)
   private static final float STATIONARY_GYRO_NORM_THRESH = 0.08f;   // ~4.6°/s
   private static final float STATIONARY_ACC_DEV_THRESH   = 0.80f;   // | |a|-g |
-  // EMA 계수(정지 시에만 갱신): 너무 크면 과민, 너무 작으면 느림
-  private static final float BIAS_EMA_ALPHA = 0.003f;               // 0.1%~0.5% 수준 권장
+  // EMA 계수(정지 시에만 갱신)
+  private static final float BIAS_EMA_ALPHA = 0.003f;
 
   // Snap-to-zero 조건
-  private static final double SNAP_ANGLE_DEG_THRESH = 2.0;          // ±2°
-  private static final float  SNAP_GYRO_NORM_THRESH = 0.05f;        // 더 엄격한 자이로 정지 조건
+  private static final double SNAP_ANGLE_DEG_THRESH = 2.0;
+  private static final float  SNAP_GYRO_NORM_THRESH = 0.05f;
   private static final float  SNAP_ACC_DEV_THRESH   = 0.60f;
 
   // Timestamp (ns) for dt
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
   private final double[] diagAxisBody = norm(new double[]{1, -1, 0});
 
   // UI
-  private TextView tvAngle, tvQuat, tvDt, tvStatus;
+  private TextView tvAngle, tvQuat, tvDt, tvStatus, tvGForce; // <-- G-force 추가
   private Button btnReset;
 
   // For simple FPS / dt display
@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     tvQuat  = findViewById(R.id.tvQuat);
     tvDt    = findViewById(R.id.tvDt);
     tvStatus= findViewById(R.id.tvStatus);
+    tvGForce= findViewById(R.id.tvGForce); // <-- G-force 추가
     btnReset= findViewById(R.id.btnReset);
 
     btnReset.setOnClickListener(v -> resetReference());
@@ -181,6 +182,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             angleDeg = 0.0;
           }
 
+          // ---------- 4) G-force 계산 및 표시 ----------
+          final double gForce = accMag / G; // phone feels |a| in g units
+
           // UI 업데이트(쓰로틀)
           long now = SystemClock.elapsedRealtime();
           if (now - lastUiUpdateMs > 25) {
@@ -188,12 +192,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             tvAngle.setText(String.format("Diagonal-axis angle: %7.2f°", angleDeg));
             tvQuat.setText(String.format("q = [w=%.4f, x=%.4f, y=%.4f, z=%.4f]", qCurr[0], qCurr[1], qCurr[2], qCurr[3]));
             tvDt.setText(String.format("dt=%.3f ms", dt*1000.0));
-            // 상태 텍스트에 현재 바이어스/정지여부 간단 표기
             tvStatus.setText(String.format(
                 "Bias[rad/s]=[%.4f, %.4f, %.4f] · stationary=%s",
                 gyroBias[0], gyroBias[1], gyroBias[2],
                 isStationaryForBias ? "Y" : "N"
             ));
+            tvGForce.setText(String.format("G-force: %.3f g (|a|=%.3f m/s²)", gForce, accMag));
           }
         }
       }
