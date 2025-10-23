@@ -81,7 +81,7 @@
       android:id="@+id/tvGForce"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
-      android:text="G-force: ---.--- g  (|a|=---- m/s²)"
+      android:text="G-force (max): ---.--- g  (|a|=---- m/s²)"
       android:textSize="36sp"
       android:textStyle="bold"
       app:layout_constraintTop_toBottomOf="@id/btnReset"
@@ -89,5 +89,16 @@
       app:layout_constraintEnd_toEndOf="parent"
       android:paddingTop="12dp"
       android:paddingBottom="12dp"/>
+
+  <!-- 새로 추가: G-force 아래에도 Reset 버튼 -->
+  <Button
+      android:id="@+id/btnReset2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="RESET (Set current = 0°)"
+      app:layout_constraintTop_toBottomOf="@id/tvGForce"
+      app:layout_constraintStart_toStartOf="parent"
+      android:paddingTop="4dp"
+      android:paddingBottom="8dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
